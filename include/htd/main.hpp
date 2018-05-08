@@ -56,6 +56,8 @@
 #include <htd/EnhancedMaximumCardinalitySearchOrderingAlgorithm.hpp>
 #include <htd/ExchangeNodeReplacementOperation.hpp>
 #include <htd/ExhaustiveVertexSelectionStrategy.hpp>
+#include <htd/FileGraphDecompositionAlgorithm.hpp>
+#include <htd/FileTreeDecompositionAlgorithm.hpp>
 #include <htd/FilteredHyperedgeCollection.hpp>
 #include <htd/FitnessEvaluation.hpp>
 #include <htd/FlowNetworkStructure.hpp>
