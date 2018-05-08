@@ -51,9 +51,9 @@ if(UNIX)
     )
 endif(UNIX)
 
-if(MSVC)
+if(MSVC OR CYGWIN)
     target_link_libraries(htd_io htd)
-endif(MSVC)
+endif(MSVC OR CYGWIN)
 
 install(TARGETS htd_io DESTINATION lib)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/htd_io" DESTINATION include)
