@@ -27,7 +27,9 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
     /**
      *  Constructor for the implementation details structure.
      *
-     *  @param[in] manager  The management instance to which the current object instance belongs.
+     *  @param[in] manager          The management instance to which the current object instance belongs.
+     *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
+     *  @param[in] isPath           Flag indicating if the decomposition parameter is a file path or not.
      */
     Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
     {
@@ -45,13 +47,13 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
 
                 treeD.sputn("\n", 1);
             }
-            this->decomposition = std::string(treeD.str());
+            this->decomposition_ = std::string(treeD.str());
         }
         else
         {
-            this->decomposition = std::string(decomposition);
+            this->decomposition_ = std::string(decomposition);
         }
-        baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition, false);
+        baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition_, false);
     }
 
     /**
@@ -59,7 +61,7 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] original The original implementation details structure.
      */
-    Implementation(const Implementation & original) : decomposition(original.decomposition), managementInstance_(original.managementInstance_), baseAlgorithm_(original.baseAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_()
+    Implementation(const Implementation & original) : decomposition_(original.decomposition_), managementInstance_(original.managementInstance_), baseAlgorithm_(original.baseAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_()
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -96,9 +98,9 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The path to the file containing the tree decompostion.
+     *  The string containing the decompostion in td format.
      */
-    std::string decomposition;
+    std::string decomposition_;
 
     /**
      *  The management instance to which the current object instance belongs.
@@ -385,16 +387,6 @@ void htd::FileTreeDecompositionAlgorithm::setManagementInstance(const htd::Libra
     HTD_ASSERT(manager != nullptr)
 
     implementation_->managementInstance_ = manager;
-}
-
-bool htd::FileTreeDecompositionAlgorithm::isCompressionEnabled(void) const
-{
-    return implementation_->baseAlgorithm_->isCompressionEnabled();
-}
-
-void htd::FileTreeDecompositionAlgorithm::setCompressionEnabled(bool compressionEnabled)
-{
-    implementation_->baseAlgorithm_->setCompressionEnabled(compressionEnabled);
 }
 
 bool htd::FileTreeDecompositionAlgorithm::isComputeInducedEdgesEnabled(void) const

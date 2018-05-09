@@ -23,7 +23,9 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     /**
      *  Constructor for the implementation details structure.
      *
-     *  @param[in] manager   The management instance to which the current object instance belongs.
+     *  @param[in] manager          The management instance to which the current object instance belongs.
+     *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
+     *  @param[in] isPath           Flag indicating if the decomposition parameter is a file path or not.
      */
     Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : managementInstance_(manager), orderingAlgorithm_(manager->orderingAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), compressionEnabled_(true), computeInducedEdges_(true)
     {
@@ -41,11 +43,11 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
 
                 treeD.sputn("\n", 1);
             }
-            this->decomposition = std::string(treeD.str());
+            this->decomposition_ = std::string(treeD.str());
         }
         else
         {
-            this->decomposition = std::string(decomposition);
+            this->decomposition_ = std::string(decomposition);
         }
     }
 
@@ -65,9 +67,9 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The path to the file containing the graph decompostion.
+     *  The string containing the decomposition in td format.
      */
-    std::string decomposition;
+    std::string decomposition_;
 
     /**
      *  The management instance to which the current object instance belongs.
@@ -102,16 +104,6 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     /**
      *  Compute a new mutable graph decompostion of the given graph.
      *
-     *  @param[in] graph    The graph which shall be decomposed.
-     *  @param[in] ordering The vertex ordering which shall be used to compute the decomposition.
-     *
-     *  @return A mutable graph decompostion of the given graph based on the provided vertex ordering.
-     */
-    htd::IMutableGraphDecomposition * computeMutableDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::vertex_t> & ordering) const;
-
-    /**
-     *  Compute a new mutable graph decompostion of the given graph.
-     *
      *  @param[in] graph                The graph which shall be decomposed.
      *  @param[in] preprocessedGraph    The input graph in preprocessed format.
      *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
@@ -120,149 +112,6 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
      *  @return A pair consisting of a mutable graph decompostion of the given graph or a null-pointer in case that no decomposition with a appropriate maximum bag size could be found after maxIterationCount iterations and the number of iterations actually needed to find the decomposition at hand.
      */
     std::pair<htd::IMutableGraphDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
-
-    /**
-     *  Get the vertex which is ranked first in the vertex elimination ordering.
-     *
-     *  @param[in] vertices         The set of vertices which shall be investigated.
-     *  @param[in] ordering         The vertex elimination ordering.
-     *  @param[in] vertexIndices    The indices of the vertices in the vertex elimination ordering.
-     *
-     *  @return The vertex which is ranked first in the vertex elimination ordering.
-     */
-    htd::vertex_t getMinimumVertex(const std::vector<htd::vertex_t> & vertices, const std::vector<htd::vertex_t> & ordering, const std::vector<htd::index_t> & vertexIndices) const;
-
-    /**
-     *  Get the vertex which is ranked first in the vertex elimination ordering.
-     *
-     *  @param[in] vertices         The set of vertices which shall be investigated.
-     *  @param[in] ordering         The vertex elimination ordering.
-     *  @param[in] vertexIndices    The indices of the vertices in the vertex elimination ordering.
-     *  @param[in] excludedVertex   The vertex which shall be ignored during the determination of the first vertex in the ordering.
-     *
-     *  @return The vertex which is ranked first in the vertex elimination ordering.
-     */
-    htd::vertex_t getMinimumVertex(const std::vector<htd::vertex_t> & vertices, const std::vector<htd::vertex_t> & ordering, const std::vector<htd::index_t> & vertexIndices, htd::vertex_t excludedVertex) const;
-
-    /**
-     *  Compress the given decomposition by retaining only subset-maximal bags.
-     *
-     *  @param[in] startingVertex       The starting vertex.
-     *  @param[in] neighbors            The neighborhood relation which shall be updated.
-     *  @param[in] bagContent           The bag contents which might be swapped during the traversal.
-     *  @param[in] unvisitedVertices    The set of unvisited vertices which is updated during the traversal.
-     *  @param[in] relevantVertices     The set of relevant vertices which will be updated where relevance refers to subset-maximality.
-     *  @param[in] inducedEdges         A vector holding the indices of the edges which are induced by the bag content associated with a vertex.
-     *  @param[in] edgeTarget           A vector holding the first target node for each edge.
-     */
-    void compressDecomposition(htd::vertex_t startingVertex,
-                               std::vector<std::vector<htd::vertex_t>> & neighbors,
-                               std::vector<std::vector<htd::vertex_t>> & bagContent,
-                               std::unordered_set<htd::vertex_t> & unvisitedVertices,
-                               std::vector<htd::vertex_t> & relevantVertices,
-                               std::vector<std::vector<htd::index_t>> & inducedEdges,
-                               std::vector<htd::index_t> & edgeTarget) const;
-
-    /**
-     *  Compress the given decomposition by retaining only subset-maximal bags.
-     *
-     *  If the bag of the vertex is a subset of the bag of its parent, the vertex is removed. If the bag of
-     *  the vertex is a superset of the bag of its parent, the bag contents are swapped and the vertex is
-     *  removed. Otherwise, the decomposition is left unchanged.
-     *
-     *  @param[in] vertex           The vertex.
-     *  @param[in] parent           The parent of the vertex during the traversal.
-     *  @param[in] neighbors        The neighborhood relation which shall be updated.
-     *  @param[in] bagContent       The bag contents which might be swapped during the traversal.
-     *  @param[in] relevantVertices The set of relevant vertices which will be updated where relevance refers to subset-maximality.
-     *  @param[in] inducedEdges     A vector holding the indices of the edges which are induced by the bag content associated with a vertex.
-     *  @param[in] edgeTarget       A vector holding the first target node for each edge.
-     */
-    void compressDecomposition(htd::vertex_t vertex, htd::vertex_t parent,
-                               std::vector<std::vector<htd::vertex_t>> & neighbors,
-                               std::vector<std::vector<htd::vertex_t>> & bagContent,
-                               std::vector<htd::vertex_t> & relevantVertices,
-                               std::vector<std::vector<htd::index_t>> & inducedEdges,
-                               std::vector<htd::index_t> & edgeTarget) const;
-
-    /**
-     *  Update the given decomposition by performing pre-order traversal.
-     *
-     *  @param[in] graph                    The graph from which the decomposition was computed.
-     *  @param[in] decomposition            The decomposition which shall be updated.
-     *  @param[in] startingVertex           The starting vertex.
-     *  @param[in] neighbors                The neighborhood relation which shall be used.
-     *  @param[in] bagContent               The bag contents.
-     *  @param[in] unvisitedVertices        The set of unvisited vertices which is updated during the traversal.
-     *  @param[in] inducedEdges             A vector holding the indices of the edges which are induced by the bag content associated with a vertex.
-     *  @param[in] decompositionVertices    A mapping between the vertices and their counterparts in the decomposition.
-     *
-     *  @note The bag contents and the induced edges are moved into the decomposition during this operation.
-     */
-    void updateDecomposition(const htd::IMultiHypergraph & graph,
-                             htd::IMutableGraphDecomposition & decomposition,
-                             htd::vertex_t startingVertex,
-                             const std::vector<std::vector<htd::vertex_t>> & neighbors,
-                             std::vector<std::vector<htd::vertex_t>> & bagContent,
-                             std::vector<std::vector<htd::index_t>> & inducedEdges,
-                             std::unordered_set<htd::vertex_t> & unvisitedVertices,
-                             std::unordered_map<htd::vertex_t, htd::vertex_t> & decompositionVertices) const;
-
-    /**
-     *  Check whether two sets are subset-maximal with respect to the other set.
-     *
-     *  @param[in] set1 The first set.
-     *  @param[in] set2 The second set.
-     *
-     *  @return This function returns -1 if the first set is a superset of or identical to the second set.
-     *  If the second set is a proper superset of the first set, the return value is 1. Otherwise, the
-     *  return value is 0.
-     */
-    int is_maximal(const std::vector<htd::vertex_t> & set1, const std::vector<htd::vertex_t> & set2) const;
-
-    /**
-     *  Distribute a given edge, identified by its index, in the decomposition so that the information about induced edges is updated.
-     *
-     *  @param[in] edgeIndex        The index of the edge which shall be distributed.
-     *  @param[in] edge             The sorted elements of the edge which shall be distributed.
-     *  @param[in] startBucket      The identifier of the node from which the process shall start.
-     *  @param[in] buckets          The available buckets.
-     *  @param[in] neighbors        The neighbors of the buckets.
-     *  @param[in] inducedEdges     The set of edge indices induced by a bucket.
-     *  @param[in] lastAssignedEdge The identifier of the last edge which was assigned to a bucket.
-     *  @param[in] originStack      The stack instance used for backtracking.
-     */
-    void distributeEdge(htd::index_t edgeIndex,
-                        const std::vector<htd::vertex_t> & edge,
-                        htd::vertex_t startBucket,
-                        const std::vector<std::vector<htd::vertex_t>> & buckets,
-                        const std::vector<std::vector<htd::vertex_t>> & neighbors,
-                        std::vector<std::vector<htd::index_t>> & inducedEdges,
-                        std::vector<htd::id_t> & lastAssignedEdge,
-                        std::stack<htd::vertex_t> & originStack) const;
-
-    /**
-     *  Distribute a given edge, identified by its index, in the decomposition so that the information about induced edges is updated.
-     *
-     *  @param[in] edgeIndex        The index of the edge which shall be distributed.
-     *  @param[in] vertex1          The first vertex (i.e., the one with lower ID) of the edge which shall be distributed.
-     *  @param[in] vertex2          The second vertex (i.e., the one with higher ID) of the edge which shall be distributed.
-     *  @param[in] startBucket      The identifier of the node from which the process shall start.
-     *  @param[in] buckets          The available buckets.
-     *  @param[in] neighbors        The neighbors of the buckets.
-     *  @param[in] inducedEdges     The set of edge indices induced by a bucket.
-     *  @param[in] lastAssignedEdge The identifier of the last edge which was assigned to a bucket.
-     *  @param[in] originStack      The stack instance used for backtracking.
-     */
-    void distributeEdge(htd::index_t edgeIndex,
-                        htd::vertex_t vertex1,
-                        htd::vertex_t vertex2,
-                        htd::vertex_t startBucket,
-                        const std::vector<std::vector<htd::vertex_t>> & buckets,
-                        const std::vector<std::vector<htd::vertex_t>> & neighbors,
-                        std::vector<std::vector<htd::index_t>> & inducedEdges,
-                        std::vector<htd::id_t> & lastAssignedEdge,
-                        std::stack<htd::vertex_t> & originStack) const;
 
     /**
      *  Compute the set union of two sets and store the result in the first set.
@@ -316,19 +165,38 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
         }
     }
 
-    void parseEdgeLine(std::string & item, IMutableGraphDecomposition * ret) const;
+    /**
+     * Parses the given line as edge line of the decomposition.
+     *
+     * @param[in] line          an edge line of the decomposition
+     * @param[in,out] decomp    the decomposition
+     */
+    void parseEdgeLine(std::string & line, IMutableGraphDecomposition * decomp) const;
 
-    void parseBagLine(std::string item, IMutableGraphDecomposition * ret, const IMultiHypergraph & graph) const;
+    /**
+     * Parses the given line as bag line of the decomposition.
+     *
+     * @param[in] line          a bag line of the decomposition
+     * @param[in,out] decomp       the decomposition
+     * @param[in] graph         the base graph of the decomposition
+     */
+    void parseBagLine(std::string line, IMutableGraphDecomposition * decomp, const IMultiHypergraph & graph) const;
 
-    void getInducedEdges(std::vector<vertex_t> & bucket, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges) const;
+    /**
+     * Computes the edges induced by the given bag.
+     * @param[in] bag               the bag of the decomposition
+     * @param[in] graph             the base graph of the decomposition
+     * @param[in,out] inducedEdges  the edges induced by the bag
+     */
+    void getInducedEdges(std::vector<vertex_t> & bag, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges) const;
 };
 
-htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decompPath, const bool & isPath) : implementation_(new Implementation(manager, decompPath, isPath))
+htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
 {
 
 }
 
-htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decompPath, const bool & isPath) : implementation_(new Implementation(manager, decompPath, isPath))
+htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -588,16 +456,6 @@ void htd::FileGraphDecompositionAlgorithm::setManagementInstance(const htd::Libr
     implementation_->managementInstance_ = manager;
 }
 
-bool htd::FileGraphDecompositionAlgorithm::isCompressionEnabled(void) const
-{
-    return implementation_->compressionEnabled_;
-}
-
-void htd::FileGraphDecompositionAlgorithm::setCompressionEnabled(bool compressionEnabled)
-{
-    implementation_->compressionEnabled_ = compressionEnabled;
-}
-
 bool htd::FileGraphDecompositionAlgorithm::isComputeInducedEdgesEnabled(void) const
 {
     return implementation_->computeInducedEdges_;
@@ -610,9 +468,8 @@ void htd::FileGraphDecompositionAlgorithm::setComputeInducedEdgesEnabled(bool co
 
 htd::FileGraphDecompositionAlgorithm * htd::FileGraphDecompositionAlgorithm::clone(void) const
 {
-    htd::FileGraphDecompositionAlgorithm * ret = new htd::FileGraphDecompositionAlgorithm(implementation_->managementInstance_, implementation_->decomposition, false);
+    htd::FileGraphDecompositionAlgorithm * ret = new htd::FileGraphDecompositionAlgorithm(implementation_->managementInstance_, implementation_->decomposition_, false);
 
-    ret->setCompressionEnabled(implementation_->compressionEnabled_);
     ret->setComputeInducedEdgesEnabled(implementation_->computeInducedEdges_);
 
     for (const auto & labelingFunction : implementation_->labelingFunctions_)
@@ -646,7 +503,7 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
 {
     const htd::LibraryInstance & managementInstance = *managementInstance_;
 
-    htd::IMutableGraphDecomposition * ret = managementInstance.graphDecompositionFactory().createInstance();
+    htd::IMutableGraphDecomposition * decomposition = managementInstance.graphDecompositionFactory().createInstance();
 
     std::size_t iterations = 0;
 
@@ -660,33 +517,30 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
 
         std::vector<std::vector<htd::index_t>> inducedEdges(lastVertex + 1);
 
-        std::stringstream ss(decomposition);
+        std::stringstream ss(decomposition_);
 
-        std::string item;
+        std::string line;
 
-        while (getline(ss, item))
+        while (getline(ss, line))
         {
             //ignore empty line
-            if (item.length() > 0)
+            if (line.length() > 0)
             {
-                char type = item.at(0);
-                if (type == 'c')
+                char type = line.at(0);
+                switch (type)
                 {
-                    //comment line (ignore)
-                }
-                else if (type == 's')
-                {
-                    //start line (ignore)
-                }
-                else if (type == 'b')
-                {
-                    //bag line
-                    parseBagLine(item, ret, graph);
-                }
-                else
-                {
-                    //edge line
-                    parseEdgeLine(item, ret);
+                    case 'c': // comment line
+
+                    case 's': // start line
+                        break;
+
+                    case 'b': // bag line
+                        parseBagLine(line, decomposition, graph);
+                        break;
+
+                    default: // edge line
+                        parseEdgeLine(line, decomposition);
+                        break;
                 }
             }
         }
@@ -698,9 +552,9 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
         {
             bool found = false;
 
-            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end(); ++iter_decomp)
+            for (ConstIterator<vertex_t> iter_decomp = decomposition->vertices().begin(); iter_decomp != decomposition->vertices().end(); ++iter_decomp)
             {
-                std::vector<vertex_t> & bagContent = ret->mutableBagContent(*iter_decomp);
+                std::vector<vertex_t> & bagContent = decomposition->mutableBagContent(*iter_decomp);
 
                 if (std::find(bagContent.begin(), bagContent.end(), *iter) != bagContent.end())
                 {
@@ -711,11 +565,11 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
             }
             if (!found)
             {
-                delete ret;
+                delete decomposition;
 
-                ret = nullptr;
+                decomposition = nullptr;
 
-                return std::make_pair(ret, iterations);
+                return std::make_pair(decomposition, iterations);
             }
         }
 
@@ -732,9 +586,9 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
 
             bool found = false;
 
-            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end() & !found; ++iter_decomp)
+            for (ConstIterator<vertex_t> iter_decomp = decomposition->vertices().begin(); iter_decomp != decomposition->vertices().end() && !found; ++iter_decomp)
             {
-                std::vector<vertex_t> & bagContent = ret->mutableBagContent(*iter_decomp);
+                std::vector<vertex_t> & bagContent = decomposition->mutableBagContent(*iter_decomp);
 
                 for (unsigned long i = 0; i <= elements.size(); i++)
                 {
@@ -753,32 +607,45 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
             }
             if (!found)
             {
-                delete ret;
+                delete decomposition;
 
-                ret = nullptr;
+                decomposition = nullptr;
 
-                return std::make_pair(ret, iterations);
+                return std::make_pair(decomposition, iterations);
             }
             ++hyperedgePosition;
+        }
+
+        // check bag size
+        for (ConstIterator<vertex_t> iter_decomp = decomposition->vertices().begin(); iter_decomp != decomposition->vertices().end(); ++iter_decomp)
+        {
+            if (decomposition->mutableBagContent(*iter_decomp).size() > maxBagSize)
+            {
+                delete decomposition;
+
+                decomposition = nullptr;
+
+                return std::make_pair(decomposition, iterations);
+            };
         }
     }
     else
     {
         if (!managementInstance.isTerminated())
         {
-            ret->addVertex();
+            decomposition->addVertex();
         }
     }
-    return std::make_pair(ret, iterations);
+    return std::make_pair(decomposition, iterations);
 }
 
-void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::string item, IMutableGraphDecomposition * ret, const IMultiHypergraph & graph) const
+void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::string line, IMutableGraphDecomposition * decomp, const IMultiHypergraph & graph) const
 {
     std::vector<index_t> inducedEdges;
 
     std::vector<vertex_t> buckets;
 
-    std::stringstream sline(item);
+    std::stringstream sline(line);
 
     std::string i;
 
@@ -796,10 +663,10 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::str
 
     getInducedEdges(buckets, graph, inducedEdges);
 
-    ret->addVertex(std::vector<htd::vertex_t>(buckets), graph.hyperedgesAtPositions(inducedEdges));
+    decomp->addVertex(std::vector<htd::vertex_t>(buckets), graph.hyperedgesAtPositions(inducedEdges));
 }
 
-void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::vector<vertex_t> & bucket, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges) const
+void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::vector<vertex_t> & bag, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges) const
 {
 
     std::size_t edgeCount = graph.edgeCount();
@@ -818,7 +685,7 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
             {
                 htd::vertex_t vertex = elements[0];
 
-                if (std::find(bucket.begin(), bucket.end(), vertex) != bucket.end())
+                if (std::find(bag.begin(), bag.end(), vertex) != bag.end())
                 {
                     inducedEdges.push_back(index);
                 }
@@ -831,7 +698,7 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
 
                 htd::vertex_t vertex2 = elements[1];
 
-                if (std::find(bucket.begin(), bucket.end(), vertex1) != bucket.end() && std::find(bucket.begin(), bucket.end(), vertex2) != bucket.end())
+                if (std::find(bag.begin(), bag.end(), vertex1) != bag.end() && std::find(bag.begin(), bag.end(), vertex2) != bag.end())
                 {
                     inducedEdges.push_back(index);
                 }
@@ -848,7 +715,7 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
 
                         break;
                     }
-                    if (std::find(bucket.begin(), bucket.end(), elements[i]) == bucket.end())
+                    if (std::find(bag.begin(), bag.end(), elements[i]) == bag.end())
                     {
                         break;
                     }
@@ -863,9 +730,9 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
 }
 
 
-void htd::FileGraphDecompositionAlgorithm::Implementation::parseEdgeLine(std::string & item, IMutableGraphDecomposition * ret) const
+void htd::FileGraphDecompositionAlgorithm::Implementation::parseEdgeLine(std::string & line, IMutableGraphDecomposition * decomp) const
 {
-    std::stringstream sline(item);
+    std::stringstream sline(line);
 
     std::string i;
 
@@ -878,7 +745,7 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::parseEdgeLine(std::st
             edgeNodes.push_back(stoul(i));
         }
     }
-    ret->addEdge(edgeNodes);
+    decomp->addEdge(edgeNodes);
 }
 
 #endif /* HTD_FILEGRAPHDECOMPOSITIONALGORITHM_CPP */

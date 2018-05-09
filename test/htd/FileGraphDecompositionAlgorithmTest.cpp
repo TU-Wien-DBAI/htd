@@ -135,12 +135,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraph)
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
     htd::FilteredHyperedgeCollection hyperedges1 = decomposition->inducedHyperedges(1);
-    ASSERT_EQ((*hyperedges1.begin())[0], 2);
-    ASSERT_EQ((*hyperedges1.begin())[1], 3);
+    ASSERT_EQ((*hyperedges1.begin())[0], 2u);
+    ASSERT_EQ((*hyperedges1.begin())[1], 3u);
 
     htd::FilteredHyperedgeCollection hyperedges2 = decomposition->inducedHyperedges(2);
-    ASSERT_EQ((*hyperedges2.begin())[0], 1);
-    ASSERT_EQ((*hyperedges2.begin())[1], 2);
+    ASSERT_EQ((*hyperedges2.begin())[0], 1u);
+    ASSERT_EQ((*hyperedges2.begin())[1], 2u);
 
 
     ASSERT_NE(decomposition, nullptr);
@@ -165,7 +165,7 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultWrongVertexNumber)
     htd::vertex_t vertex1 = graph.addVertex();
     htd::vertex_t vertex2 = graph.addVertex();
     htd::vertex_t vertex3 = graph.addVertex();
-    htd::vertex_t vertex4 = graph.addVertex();
+    graph.addVertex();
 
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
