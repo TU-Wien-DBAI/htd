@@ -29,13 +29,16 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     {
         if (isPath)
         {
-
             std::string inputLine;
+
             std::ifstream fileIn(decomposition);
+
             std::stringbuf treeD;
+
             while (getline(fileIn, inputLine))
             {
                 treeD.sputn(inputLine.c_str(), inputLine.size());
+
                 treeD.sputn("\n", 1);
             }
             this->decomposition = std::string(treeD.str());
@@ -646,6 +649,7 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
     htd::IMutableGraphDecomposition * ret = managementInstance.graphDecompositionFactory().createInstance();
 
     std::size_t iterations = 0;
+
     std::size_t size = graph.vertexCount();
 
     if (size > 0)
@@ -657,12 +661,13 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
         std::vector<std::vector<htd::index_t>> inducedEdges(lastVertex + 1);
 
         std::stringstream ss(decomposition);
+
         std::string item;
 
         while (getline(ss, item))
         {
             //ignore empty line
-            if (item.length() > 2)
+            if (item.length() > 0)
             {
                 char type = item.at(0);
                 if (type == 'c')
@@ -671,7 +676,7 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
                 }
                 else if (type == 's')
                 {
-                    //start line
+                    //start line (ignore)
                 }
                 else if (type == 'b')
                 {
@@ -686,49 +691,76 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
             }
         }
 
-        /*
         ConstIterator<vertex_t> iter;
-        for (iter = graph.vertices().begin(); iter != graph.vertices().end(); std::advance(iter, 1))
+
+        // check if all vertices are in a bag
+        for (iter = graph.vertices().begin(); iter != graph.vertices().end(); ++iter)
         {
             bool found = false;
 
-            //TODO check that every vertex occurs in the decomposition
-            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end(); std::advance(iter, 1))
+            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end(); ++iter_decomp)
             {
                 std::vector<vertex_t> & bagContent = ret->mutableBagContent(*iter_decomp);
+
                 if (std::find(bagContent.begin(), bagContent.end(), *iter) != bagContent.end())
                 {
                     found = true;
+
                     break;
                 }
             }
             if (!found)
             {
-                //TODO one vertex not found
-            }
+                delete ret;
 
-            //TODO for every edge check that it is in a bag
-            const ConstCollection<Hyperedge> & edge = graph.hyperedges(*iter);
-            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end(); std::advance(iter_decomp, 1))
+                ret = nullptr;
+
+                return std::make_pair(ret, iterations);
+            }
+        }
+
+        std::size_t edgeCount = graph.edgeCount();
+
+        const htd::ConstCollection<htd::Hyperedge> & hyperedges = graph.hyperedges();
+
+        auto hyperedgePosition = hyperedges.begin();
+
+        // check for every edge if it is in a bag
+        for (htd::index_t index = 0; index < edgeCount; ++index)
+        {
+            const std::vector<htd::vertex_t> & elements = hyperedgePosition->sortedElements();
+
+            bool found = false;
+
+            for (ConstIterator<vertex_t> iter_decomp = ret->vertices().begin(); iter_decomp != ret->vertices().end() & !found; ++iter_decomp)
             {
-                found=true;
-                for (ConstIterator<vertex_t> edge_iter = edge.begin(); edge_iter != edge.end(); std::advance(edge_iter, 1))
+                std::vector<vertex_t> & bagContent = ret->mutableBagContent(*iter_decomp);
+
+                for (unsigned long i = 0; i <= elements.size(); i++)
                 {
-                    std::vector<vertex_t> & bagContent = ret->mutableBagContent(*iter_decomp);
-                    if (std::find(bagContent.begin(), bagContent.end(), *iter) == bagContent.end())
+                    if (i == elements.size())
                     {
-                        found = false;
+                        found = true;
+
+                        break;
+                    }
+
+                    if (std::find(bagContent.begin(), bagContent.end(), elements[i]) == bagContent.end())
+                    {
                         break;
                     }
                 }
-                ret->mutableInducedHyperedges(*iter_decomp);
             }
             if (!found)
             {
-                //TODO edge not found
+                delete ret;
+
+                ret = nullptr;
+
+                return std::make_pair(ret, iterations);
             }
+            ++hyperedgePosition;
         }
-        */
     }
     else
     {
@@ -743,11 +775,17 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
 void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::string item, IMutableGraphDecomposition * ret, const IMultiHypergraph & graph) const
 {
     std::vector<index_t> inducedEdges;
+
     std::vector<vertex_t> buckets;
+
     std::stringstream sline(item);
+
     std::string i;
+
     std::getline(sline, i, ' '); //b
+
     std::getline(sline, i, ' '); //bag number
+
     while (getline(sline, i, ' ')) //vertices
     {
         if (i[0] != '\r')
@@ -781,17 +819,22 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
                 htd::vertex_t vertex = elements[0];
 
                 if (std::find(bucket.begin(), bucket.end(), vertex) != bucket.end())
+                {
                     inducedEdges.push_back(index);
+                }
 
                 break;
             }
             case 2:
             {
                 htd::vertex_t vertex1 = elements[0];
+
                 htd::vertex_t vertex2 = elements[1];
 
                 if (std::find(bucket.begin(), bucket.end(), vertex1) != bucket.end() && std::find(bucket.begin(), bucket.end(), vertex2) != bucket.end())
+                {
                     inducedEdges.push_back(index);
+                }
 
                 break;
             }
@@ -802,6 +845,7 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
                     if (i == elements.size())
                     {
                         inducedEdges.push_back(index);
+
                         break;
                     }
                     if (std::find(bucket.begin(), bucket.end(), elements[i]) == bucket.end())
@@ -822,9 +866,11 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::getInducedEdges(std::
 void htd::FileGraphDecompositionAlgorithm::Implementation::parseEdgeLine(std::string & item, IMutableGraphDecomposition * ret) const
 {
     std::stringstream sline(item);
+
     std::string i;
 
     std::vector<vertex_t> edgeNodes;
+
     while (getline(sline, i, ' ')) //vertices
     {
         if (i[0] != '\r')

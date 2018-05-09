@@ -34,11 +34,15 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
         if (isPath)
         {
             std::string inputLine;
+
             std::ifstream fileIn(decomposition);
+
             std::stringbuf treeD;
+
             while (getline(fileIn, inputLine))
             {
                 treeD.sputn(inputLine.c_str(), inputLine.size());
+
                 treeD.sputn("\n", 1);
             }
             this->decomposition = std::string(treeD.str());
@@ -443,6 +447,7 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FileTreeDecomposit
                         for (htd::index_t index = 0; index < componentCount - 1; ++index)
                         {
                             const std::vector<htd::vertex_t> & component1 = components[index];
+
                             const std::vector<htd::vertex_t> & component2 = components[index + 1];
 
                             /* Coverity complains about std::rand() being not safe for security related operations. We are happy with a pseudo-random number here. */
@@ -470,14 +475,11 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FileTreeDecomposit
 
                     if (predecessor == htd::Vertex::UNKNOWN)
                     {
-                        node = ret->insertRoot(std::move(mutableGraphDecomposition.mutableBagContent(vertex)),
-                                               std::move(mutableGraphDecomposition.mutableInducedHyperedges(vertex)));
+                        node = ret->insertRoot(std::move(mutableGraphDecomposition.mutableBagContent(vertex)), std::move(mutableGraphDecomposition.mutableInducedHyperedges(vertex)));
                     }
                     else
                     {
-                        node = ret->addChild(vertexMapping.at(predecessor),
-                                             std::move(mutableGraphDecomposition.mutableBagContent(vertex)),
-                                             std::move(mutableGraphDecomposition.mutableInducedHyperedges(vertex)));
+                        node = ret->addChild(vertexMapping.at(predecessor), std::move(mutableGraphDecomposition.mutableBagContent(vertex)), std::move(mutableGraphDecomposition.mutableInducedHyperedges(vertex)));
                     }
 
                     vertexMapping.emplace(vertex, node);

@@ -50,36 +50,16 @@ class FileGraphDecompositionAlgorithmTest : public ::testing::Test
         }
 };
 
-std::string graph_1 = std::string("s td 1 0 0\n"
-                                  "b 1 ");
-std::string graph_2 = std::string("s td 3 1 3\n"
-                                  "b 1 1 \n"
-                                  "b 2 3 \n"
-                                  "b 3 2 \n"
-                                  "1 2\n"
-                                  "2 3");
-std::string graph_3 = std::string("s td 2 2 3\n"
-                                  "b 1 2 3 \n"
-                                  "b 2 1 2 \n"
-                                  "1 2");
-std::string graph_4 = std::string("s td 3 1 3\n"
-                                  "b 1 1 \n"
-                                  "b 2 3 \n"
-                                  "b 3 2 \n"
-                                  "1 2\n"
-                                  "2 3");
-std::string graph_5 = std::string("s td 1 3 3\n"
-                                  "b 1 1 2 3 ");
-std::string graph_6 = std::string("s td 1 5 5\n"
-                                  "b 1 1 2 3 4 5 ");
-
 TEST(FileGraphDecompositionAlgorithmTest, CheckResultEmptyGraph)
 {
     htd::LibraryInstance * libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
 
     htd::MultiHypergraph graph(libraryInstance);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_1, false);
+    std::string decompString = std::string("s td 1 0 0\n"
+                                      "b 1 ");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -108,7 +88,14 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultDisconnectedGraph)
     graph.addVertex();
     graph.addVertex();
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_2, false);
+    std::string decompString = std::string("s td 3 1 3\n"
+                                      "b 1 1 \n"
+                                      "b 2 3 \n"
+                                      "b 3 2 \n"
+                                      "1 2\n"
+                                      "2 3");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -138,7 +125,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraph)
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_3, false);
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -164,6 +156,62 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraph)
     delete libraryInstance;
 }
 
+TEST(FileGraphDecompositionAlgorithmTest, CheckResultWrongVertexNumber)
+{
+    htd::LibraryInstance * libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
+
+    htd::MultiHypergraph graph(libraryInstance);
+
+    htd::vertex_t vertex1 = graph.addVertex();
+    htd::vertex_t vertex2 = graph.addVertex();
+    htd::vertex_t vertex3 = graph.addVertex();
+    htd::vertex_t vertex4 = graph.addVertex();
+
+    graph.addEdge(vertex1, vertex2);
+    graph.addEdge(vertex2, vertex3);
+
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+
+    htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
+
+    ASSERT_EQ(decomposition, nullptr);
+
+    delete libraryInstance;
+}
+
+TEST(FileGraphDecompositionAlgorithmTest, CheckResultWrongEdgeNumber)
+{
+    htd::LibraryInstance * libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
+
+    htd::MultiHypergraph graph(libraryInstance);
+
+    htd::vertex_t vertex1 = graph.addVertex();
+    htd::vertex_t vertex2 = graph.addVertex();
+    htd::vertex_t vertex3 = graph.addVertex();
+
+    graph.addEdge(vertex1, vertex2);
+    graph.addEdge(vertex2, vertex3);
+    graph.addEdge(vertex1, vertex3);
+
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+
+    htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
+
+    ASSERT_EQ(decomposition, nullptr);
+
+    delete libraryInstance;
+}
+
 TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleHypergraph1)
 {
     htd::LibraryInstance * libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
@@ -179,7 +227,14 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleHypergraph1)
     HTD_UNUSED(vertex2)
     HTD_UNUSED(vertex3)
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_4, false);
+    std::string decompString = std::string("s td 3 1 3\n"
+                                      "b 1 1 \n"
+                                      "b 2 3 \n"
+                                      "b 3 2 \n"
+                                      "1 2\n"
+                                      "2 3");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -207,7 +262,10 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleHypergraph2)
 
     graph.addEdge(std::vector<htd::vertex_t>{vertex3, vertex3, vertex2, vertex1, vertex2, vertex3, vertex3});
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_5, false);
+    std::string decompString = std::string("s td 1 3 3\n"
+                                      "b 1 1 2 3 ");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     algorithm.setComputeInducedEdgesEnabled(false);
 
@@ -250,7 +308,10 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultClique)
     graph.addEdge(vertex3, vertex5);
     graph.addEdge(vertex4, vertex5);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_6, false);
+    std::string decompString = std::string("s td 1 5 5\n"
+                                      "b 1 1 2 3 4 5 ");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -359,7 +420,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunc
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_3, false);
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph, 1, new BagSizeLabelingFunction(libraryInstance));
 
@@ -466,7 +532,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunc
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_3, false);
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph, {new BagSizeLabelingFunction(libraryInstance),
                                                                                       new BagSizeLabelingFunction2(libraryInstance)});
@@ -503,7 +574,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunc
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, {new BagSizeLabelingFunction(libraryInstance)}, graph_3, false);
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, {new BagSizeLabelingFunction(libraryInstance)}, decompString, false);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph, {new BagSizeLabelingFunction2(libraryInstance)});
 
@@ -539,7 +615,12 @@ TEST(FileGraphDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunc
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
-    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, graph_3, false);
+    std::string decompString = std::string("s td 2 2 3\n"
+                                      "b 1 2 3 \n"
+                                      "b 2 1 2 \n"
+                                      "1 2");
+
+    htd::FileGraphDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
 
     algorithm.addManipulationOperation(new BagSizeLabelingFunction(libraryInstance));
     algorithm.addManipulationOperation(new BagSizeLabelingFunction2(libraryInstance));
