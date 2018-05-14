@@ -25,12 +25,18 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
      *
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
-     *  @param[in] isPath           Flag indicating if the decomposition parameter is a file path or not.
      */
-    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : managementInstance_(manager), orderingAlgorithm_(manager->orderingAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), compressionEnabled_(true), computeInducedEdges_(true)
+    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), orderingAlgorithm_(manager->orderingAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), compressionEnabled_(true), computeInducedEdges_(true)
     {
-        if (isPath)
+        std::ifstream test(decomposition);
+        if (!test)
         {
+            this->decomposition_ = std::string(decomposition);
+        }
+        else
+        {
+            test.close();
+
             std::string inputLine;
 
             std::ifstream fileIn(decomposition);
@@ -44,10 +50,6 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
                 treeD.sputn("\n", 1);
             }
             this->decomposition_ = std::string(treeD.str());
-        }
-        else
-        {
-            this->decomposition_ = std::string(decomposition);
         }
     }
 
@@ -157,7 +159,7 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
             }
         }
 
-        std::copy_if(first2, last2, std::back_inserter(tmp), [&](const htd::vertex_t vertex) { return vertex != ignoredVertex; });
+        std::copy_if(first2, last2, std::back_inserter(tmp), [&](const htd::vertex_t vertex){ return vertex != ignoredVertex; });
 
         if (!tmp.empty())
         {
@@ -191,12 +193,12 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     void getInducedEdges(std::vector<vertex_t> & bag, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges) const;
 };
 
-htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
+htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decomposition) : implementation_(new Implementation(manager, decomposition))
 {
 
 }
 
-htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
+htd::FileGraphDecompositionAlgorithm::FileGraphDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decomposition) : implementation_(new Implementation(manager, decomposition))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -213,7 +215,7 @@ htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecompos
 
 htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, manipulationOperations, (std::size_t) -1, 1).first;
+    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
 std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -243,7 +245,7 @@ htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecompos
 
 htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t) -1, 1).first;
+    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
 std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -468,7 +470,7 @@ void htd::FileGraphDecompositionAlgorithm::setComputeInducedEdgesEnabled(bool co
 
 htd::FileGraphDecompositionAlgorithm * htd::FileGraphDecompositionAlgorithm::clone(void) const
 {
-    htd::FileGraphDecompositionAlgorithm * ret = new htd::FileGraphDecompositionAlgorithm(implementation_->managementInstance_, implementation_->decomposition_, false);
+    htd::FileGraphDecompositionAlgorithm * ret = new htd::FileGraphDecompositionAlgorithm(implementation_->managementInstance_, implementation_->decomposition_);
 
     ret->setComputeInducedEdgesEnabled(implementation_->computeInducedEdges_);
 

@@ -29,12 +29,18 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
-     *  @param[in] isPath           Flag indicating if the decomposition parameter is a file path or not.
      */
-    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
+    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
     {
-        if (isPath)
+        std::ifstream test(decomposition);
+        if (!test)
         {
+            this->decomposition_ = std::string(decomposition);
+        }
+        else
+        {
+            test.close();
+
             std::string inputLine;
 
             std::ifstream fileIn(decomposition);
@@ -49,11 +55,8 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
             }
             this->decomposition_ = std::string(treeD.str());
         }
-        else
-        {
-            this->decomposition_ = std::string(decomposition);
-        }
-        baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition_, false);
+
+        baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition_);
     }
 
     /**
@@ -135,12 +138,12 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
     std::pair<htd::IMutableTreeDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 };
 
-htd::FileTreeDecompositionAlgorithm::FileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
+htd::FileTreeDecompositionAlgorithm::FileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & decomposition) : implementation_(new Implementation(manager, decomposition))
 {
 
 }
 
-htd::FileTreeDecompositionAlgorithm::FileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decomposition, const bool & isPath) : implementation_(new Implementation(manager, decomposition, isPath))
+htd::FileTreeDecompositionAlgorithm::FileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & decomposition) : implementation_(new Implementation(manager, decomposition))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -162,7 +165,7 @@ htd::ITreeDecomposition * htd::FileTreeDecompositionAlgorithm::computeDecomposit
 
 htd::ITreeDecomposition * htd::FileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, manipulationOperations, (std::size_t) -1, 1).first;
+    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
 std::pair<htd::ITreeDecomposition *, std::size_t> htd::FileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -192,7 +195,7 @@ htd::ITreeDecomposition * htd::FileTreeDecompositionAlgorithm::computeDecomposit
 
 htd::ITreeDecomposition * htd::FileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t) -1, 1).first;
+    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
 std::pair<htd::ITreeDecomposition *, std::size_t> htd::FileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -461,8 +464,7 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FileTreeDecomposit
 
                 htd::BreadthFirstGraphTraversal graphTraversal(managementInstance_);
 
-                graphTraversal.traverse(*(graphDecomposition.first), graphDecomposition.first->vertexAtPosition(0), [&](htd::vertex_t vertex, htd::vertex_t predecessor, std::size_t distanceFromStartingVertex)
-                {
+                graphTraversal.traverse(*(graphDecomposition.first), graphDecomposition.first->vertexAtPosition(0), [&](htd::vertex_t vertex, htd::vertex_t predecessor, std::size_t distanceFromStartingVertex){
                     HTD_UNUSED(distanceFromStartingVertex)
 
                     if (predecessor == htd::Vertex::UNKNOWN)

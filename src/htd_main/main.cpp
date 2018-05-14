@@ -75,6 +75,10 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(inputFileOption, "Input-Specific Options");
 
+        htd_cli::SingleValueOption * inputPathOption = new htd_cli::SingleValueOption("path", "Read the decomposition from file <path>.", "path");
+
+        manager->registerOption(inputPathOption, "Input-Specific Options");
+
         htd_cli::Choice * outputFormatChoice = new htd_cli::Choice("output", "Set the output format of the decomposition to <format>.\n  (See https://github.com/mabseher/htd/blob/master/FORMATS.md for information about the available output formats.)", "format");
 
         outputFormatChoice->addPossibility("td", "Use the output format 'td'.");
@@ -175,6 +179,8 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
     const htd_cli::SingleValueOption & seedOption = optionManager.accessSingleValueOption("seed");
 
     const htd_cli::SingleValueOption & instanceOption = optionManager.accessSingleValueOption("instance");
+
+    const htd_cli::SingleValueOption & pathOption = optionManager.accessSingleValueOption("path");
 
     const htd_cli::Choice & optimizationChoice = optionManager.accessChoice("opt");
 
@@ -618,6 +624,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & patienceOption = optionManager->accessSingleValueOption("patience");
 
+        const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("path");
+
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
 
         const std::string & outputFormat = outputFormatChoice.value();
@@ -704,8 +712,11 @@ int main(int argc, const char * const * const argv)
             if (!error)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
-
-                if (std::string(optimizationChoice.value()) == "width")
+                if (pathOption.used())
+                {
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
+                }
+                else if (std::string(optimizationChoice.value()) == "width")
                 {
                     htd::CombinedWidthMinimizingTreeDecompositionAlgorithm * algorithm = new htd::CombinedWidthMinimizingTreeDecompositionAlgorithm(libraryInstance);
 
@@ -729,9 +740,7 @@ int main(int argc, const char * const * const argv)
 
                         algorithm3->setOrderingAlgorithm(new htd::MaximumCardinalitySearchOrderingAlgorithm(libraryInstance));
 
-                        adaptiveAlgorithm->addDecompositionAlgorithm(algorithm3,
-                                                                     [](const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph)
-                        {
+                        adaptiveAlgorithm->addDecompositionAlgorithm(algorithm3, [](const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph){
                             HTD_UNUSED(graph)
 
                             return preprocessedGraph.vertexCount() <= 10240;

@@ -36,7 +36,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultEmptyGraph)
     std::string decompString = std::string("s td 1 0 0\n"
                                       "b 1 ");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -74,7 +74,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultDisconnectedGraph)
                                       "1 2\n"
                                       "2 3");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -117,7 +117,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultWrongVertexNumber)
                                       "b 2 1 2 \n"
                                       "1 2");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -145,7 +145,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultWrongEdgeNumber)
                                       "b 2 1 2 \n"
                                       "1 2");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::IGraphDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -172,7 +172,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraph)
                                       "b 2 1 2 \n"
                                       "1 2");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph);
 
@@ -285,7 +285,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
                                       "b 2 1 2 \n"
                                       "1 2");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph, 1, new BagSizeLabelingFunction(libraryInstance));
 
@@ -403,7 +403,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
                                       "b 2 1 2 \n"
                                       "1 2");
 
-    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString, false);
+    htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph, {new BagSizeLabelingFunction(libraryInstance),
                                                                                      new BagSizeLabelingFunction2(libraryInstance)});
@@ -452,7 +452,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
                                       "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, {new BagSizeLabelingFunction(libraryInstance),
-                                                                    new htd::JoinNodeReplacementOperation(libraryInstance)}, decompString, false);
+                                                                    new htd::JoinNodeReplacementOperation(libraryInstance)}, decompString);
 
     htd::ITreeDecomposition * decomposition = algorithm.computeDecomposition(graph, {new BagSizeLabelingFunction2(libraryInstance)});
 
