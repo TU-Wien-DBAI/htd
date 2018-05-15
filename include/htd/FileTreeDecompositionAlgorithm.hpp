@@ -62,7 +62,7 @@ namespace htd
              *  decomposition algorithm. Deleting a manipulation operation provided to this method outside the decomposition algorithm
              *  or assigning the same manipulation operation multiple times will lead to undefined behavior.
              *
-             *  @return A new ITreeDecomposition object representing the decomposition of the given graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph..
              */
             HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, int manipulationOperationCount, ...) const;
 
@@ -76,7 +76,7 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that no decomposition with a appropriate maximum bag size could be found after maxIterationCount iterations and the number of iterations actually needed to find the decomposition at hand.
+             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
             HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
@@ -97,7 +97,7 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that no decomposition with a appropriate maximum bag size could be found after maxIterationCount iterations and the number of iterations actually needed to find the decomposition at hand.
+             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
             HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
@@ -118,7 +118,7 @@ namespace htd
              *  decomposition algorithm. Deleting a manipulation operation provided to this method outside the decomposition algorithm
              *  or assigning the same manipulation operation multiple times will lead to undefined behavior.
              *
-             *  @return A new ITreeDecomposition object representing the decomposition of the given graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph..
              */
             HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, int manipulationOperationCount, ...) const;
 
@@ -133,7 +133,7 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that no decomposition with a appropriate maximum bag size could be found after maxIterationCount iterations and the number of iterations actually needed to find the decomposition at hand.
+             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
             HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
@@ -155,7 +155,7 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that no decomposition with a appropriate maximum bag size could be found after maxIterationCount iterations and the number of iterations actually needed to find the decomposition at hand.
+             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
             HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
