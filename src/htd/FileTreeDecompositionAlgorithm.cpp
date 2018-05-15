@@ -28,19 +28,17 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *  Constructor for the implementation details structure.
      *
      *  @param[in] manager          The management instance to which the current object instance belongs.
-     *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
+     *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
     Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
     {
-        std::ifstream test(decomposition);
-        if (!test)
+        std::ifstream fileIn(decomposition);
+        if (!fileIn)
         {
             this->decomposition_ = std::string(decomposition);
         }
         else
         {
-            test.close();
-
             std::string inputLine;
 
             std::ifstream fileIn(decomposition);
@@ -54,6 +52,8 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
                 treeD.sputn("\n", 1);
             }
             this->decomposition_ = std::string(treeD.str());
+
+            fileIn.close();
         }
 
         baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition_);

@@ -24,7 +24,7 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
      *  Constructor for the implementation details structure.
      *
      *  @param[in] manager          The management instance to which the current object instance belongs.
-     *  @param[in] decompostion     String containing the tree decomposition or path to the file containing the tree decomposition.
+     *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
     Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), orderingAlgorithm_(manager->orderingAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), compressionEnabled_(true), computeInducedEdges_(true)
     {
@@ -170,7 +170,7 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     /**
      * Parses the given line as edge line of the decomposition.
      *
-     * @param[in] line          an edge line of the decomposition
+     * @param[in] line          the edge line
      * @param[in,out] decomp    the decomposition
      */
     void parseEdgeLine(std::string & line, IMutableGraphDecomposition * decomp) const;
@@ -178,14 +178,15 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     /**
      * Parses the given line as bag line of the decomposition.
      *
-     * @param[in] line          a bag line of the decomposition
-     * @param[in,out] decomp       the decomposition
+     * @param[in] line          the bag line
+     * @param[in,out] decomp    the decomposition
      * @param[in] graph         the base graph of the decomposition
      */
     void parseBagLine(std::string line, IMutableGraphDecomposition * decomp, const IMultiHypergraph & graph) const;
 
     /**
      * Computes the edges induced by the given bag.
+     *
      * @param[in] bag               the bag of the decomposition
      * @param[in] graph             the base graph of the decomposition
      * @param[in,out] inducedEdges  the edges induced by the bag
@@ -531,9 +532,10 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
                 char type = line.at(0);
                 switch (type)
                 {
-                    case 'c': // comment line
+                    case 'c': // comment line - nothing to do
+                        break;
 
-                    case 's': // start line
+                    case 's': // start line - nothing to do
                         break;
 
                     case 'b': // bag line
@@ -662,8 +664,10 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::str
             buckets.push_back(stoul(i));
         }
     }
-
-    getInducedEdges(buckets, graph, inducedEdges);
+    if (computeInducedEdges_)
+    {
+        getInducedEdges(buckets, graph, inducedEdges);
+    }
 
     decomp->addVertex(std::vector<htd::vertex_t>(buckets), graph.hyperedgesAtPositions(inducedEdges));
 }
