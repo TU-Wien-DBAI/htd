@@ -75,7 +75,7 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(inputFileOption, "Input-Specific Options");
 
-        htd_cli::SingleValueOption * inputPathOption = new htd_cli::SingleValueOption("path", "Read the decomposition from file <path>.", "path");
+        htd_cli::SingleValueOption * inputPathOption = new htd_cli::SingleValueOption("decomp", "Read the decomposition from file <path>.", "decomp");
 
         manager->registerOption(inputPathOption, "Input-Specific Options");
 
@@ -179,8 +179,6 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
     const htd_cli::SingleValueOption & seedOption = optionManager.accessSingleValueOption("seed");
 
     const htd_cli::SingleValueOption & instanceOption = optionManager.accessSingleValueOption("instance");
-
-    const htd_cli::SingleValueOption & pathOption = optionManager.accessSingleValueOption("path");
 
     const htd_cli::Choice & optimizationChoice = optionManager.accessChoice("opt");
 
@@ -624,7 +622,7 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & patienceOption = optionManager->accessSingleValueOption("patience");
 
-        const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("path");
+        const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("decomp");
 
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
 

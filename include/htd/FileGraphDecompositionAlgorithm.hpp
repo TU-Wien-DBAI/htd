@@ -154,17 +154,6 @@ namespace htd
              */
             HTD_API std::pair<htd::IGraphDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
-            /**
-             *  Set the ordering algorithm which shall be used to compute the vertex elimination ordering.
-             *
-             *  @param[in] algorithm    The ordering algorithm which shall be used to compute the vertex elimination ordering.
-             *
-             *  @note When calling this method the control over the memory region of the ordering algorithm is transferred to the decomposition
-             *  algorithm. Deleting the ordering algorithm provided to this method outside the decomposition algorithm or assigning the same
-             *  ordering algorithm multiple times will lead to undefined behavior.
-             */
-            HTD_API void setOrderingAlgorithm(htd::IOrderingAlgorithm * algorithm);
-
             HTD_API void setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) HTD_OVERRIDE;
 
             HTD_API void addManipulationOperation(htd::IDecompositionManipulationOperation * manipulationOperation) HTD_OVERRIDE;

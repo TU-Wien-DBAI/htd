@@ -34,7 +34,7 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultEmptyGraph)
     htd::MultiHypergraph graph(libraryInstance);
 
     std::string decompString = std::string("s td 1 0 0\n"
-                                      "b 1 ");
+                                           "b 1 ");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -42,15 +42,15 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultEmptyGraph)
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_EQ(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_EQ(decomposition->vertexCount(), (std::size_t)1);
 
-    EXPECT_EQ(decomposition->edgeCount(), (std::size_t) 0);
+    EXPECT_EQ(decomposition->edgeCount(), (std::size_t)0);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     const std::vector<htd::vertex_t> & bag = decomposition->bagContent(1);
 
-    EXPECT_EQ(bag.size(), (std::size_t) 0);
+    EXPECT_EQ(bag.size(), (std::size_t)0);
 
     delete decomposition;
 
@@ -68,11 +68,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultDisconnectedGraph)
     graph.addVertex();
 
     std::string decompString = std::string("s td 3 1 3\n"
-                                      "b 1 1 \n"
-                                      "b 2 3 \n"
-                                      "b 3 2 \n"
-                                      "1 2\n"
-                                      "2 3");
+                                           "b 1 1 \n"
+                                           "b 2 3 \n"
+                                           "b 3 2 \n"
+                                           "1 2\n"
+                                           "2 3");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -80,11 +80,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultDisconnectedGraph)
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_GE(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_GE(decomposition->vertexCount(), (std::size_t)1);
 
     EXPECT_EQ(decomposition->edgeCount(), decomposition->vertexCount() - 1);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     ASSERT_LE(decomposition->minimumBagSize(), decomposition->maximumBagSize());
 
@@ -107,15 +107,15 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultWrongVertexNumber)
     htd::vertex_t vertex1 = graph.addVertex();
     htd::vertex_t vertex2 = graph.addVertex();
     htd::vertex_t vertex3 = graph.addVertex();
-    htd::vertex_t vertex4 = graph.addVertex();
+    graph.addVertex();
 
     graph.addEdge(vertex1, vertex2);
     graph.addEdge(vertex2, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -141,9 +141,9 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultWrongEdgeNumber)
     graph.addEdge(vertex1, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -168,9 +168,9 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraph)
     graph.addEdge(vertex2, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -178,11 +178,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraph)
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_GE(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_GE(decomposition->vertexCount(), (std::size_t)1);
 
     EXPECT_EQ(decomposition->edgeCount(), decomposition->vertexCount() - 1);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     ASSERT_LE(decomposition->minimumBagSize(), decomposition->maximumBagSize());
 
@@ -281,9 +281,9 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
     graph.addEdge(vertex2, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -291,11 +291,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_GE(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_GE(decomposition->vertexCount(), (std::size_t)1);
 
     EXPECT_EQ(decomposition->edgeCount(), decomposition->vertexCount() - 1);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     ASSERT_LE(decomposition->minimumBagSize(), decomposition->maximumBagSize());
 
@@ -399,9 +399,9 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
     graph.addEdge(vertex2, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, decompString);
 
@@ -410,11 +410,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_GE(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_GE(decomposition->vertexCount(), (std::size_t)1);
 
     EXPECT_EQ(decomposition->edgeCount(), decomposition->vertexCount() - 1);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     ASSERT_LE(decomposition->minimumBagSize(), decomposition->maximumBagSize());
 
@@ -447,9 +447,9 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
     graph.addEdge(vertex2, vertex3);
 
     std::string decompString = std::string("s td 2 2 3\n"
-                                      "b 1 2 3 \n"
-                                      "b 2 1 2 \n"
-                                      "1 2");
+                                           "b 1 2 3 \n"
+                                           "b 2 1 2 \n"
+                                           "1 2");
 
     htd::FileTreeDecompositionAlgorithm algorithm(libraryInstance, {new BagSizeLabelingFunction(libraryInstance),
                                                                     new htd::JoinNodeReplacementOperation(libraryInstance)}, decompString);
@@ -458,11 +458,11 @@ TEST(FileTreeDecompositionAlgorithmTest, CheckResultSimpleGraphWithLabelingFunct
 
     ASSERT_NE(decomposition, nullptr);
 
-    ASSERT_GE(decomposition->vertexCount(), (std::size_t) 1);
+    ASSERT_GE(decomposition->vertexCount(), (std::size_t)1);
 
     EXPECT_EQ(decomposition->edgeCount(), decomposition->vertexCount() - 1);
 
-    ASSERT_EQ(decomposition->root(), (htd::vertex_t) 1);
+    ASSERT_EQ(decomposition->root(), (htd::vertex_t)1);
 
     ASSERT_LE(decomposition->minimumBagSize(), decomposition->maximumBagSize());
 

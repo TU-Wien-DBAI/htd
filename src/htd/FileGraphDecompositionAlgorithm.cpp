@@ -55,8 +55,6 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
 
     virtual ~Implementation()
     {
-        delete orderingAlgorithm_;
-
         for (auto & labelingFunction : labelingFunctions_)
         {
             delete labelingFunction;
@@ -69,19 +67,9 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The string containing the decomposition in td format.
-     */
-    std::string decomposition_;
-
-    /**
      *  The management instance to which the current object instance belongs.
      */
     const htd::LibraryInstance * managementInstance_;
-
-    /**
-     *  The ordering algorithm which shall be used to compute the vertex elimination ordering.
-     */
-    htd::IOrderingAlgorithm * orderingAlgorithm_;
 
     /**
      *  The labeling functions which are applied after the decomposition was computed.
@@ -94,9 +82,9 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     std::vector<htd::IGraphDecompositionManipulationOperation *> postProcessingOperations_;
 
     /**
-     *  A boolean flag indicating whether the computed decompositions shall contain only subset-maximal bags.
+     *  The string containing the decomposition in td format.
      */
-    bool compressionEnabled_;
+    std::string decomposition_;
 
     /**
      *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
@@ -109,11 +97,10 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
      *  @param[in] graph                The graph which shall be decomposed.
      *  @param[in] preprocessedGraph    The input graph in preprocessed format.
      *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-     *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
      *
      *  @return A pair consisting of a mutable graph decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
      */
-    std::pair<htd::IMutableGraphDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
+    std::pair<htd::IMutableGraphDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t) const;
 
     /**
      *  Compute the set union of two sets and store the result in the first set.
@@ -378,15 +365,6 @@ htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecompos
     return computeDecomposition(graph, preprocessedGraph, manipulationOperations);
 }
 
-void htd::FileGraphDecompositionAlgorithm::setOrderingAlgorithm(htd::IOrderingAlgorithm * algorithm)
-{
-    HTD_ASSERT(algorithm != nullptr)
-
-    delete implementation_->orderingAlgorithm_;
-
-    implementation_->orderingAlgorithm_ = algorithm;
-}
-
 void htd::FileGraphDecompositionAlgorithm::setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
 {
     for (auto & labelingFunction : implementation_->labelingFunctions_)
@@ -493,16 +471,10 @@ htd::FileGraphDecompositionAlgorithm * htd::FileGraphDecompositionAlgorithm::clo
 #endif
     }
 
-#ifndef HTD_USE_VISUAL_STUDIO_COMPATIBILITY_MODE
-    ret->setOrderingAlgorithm(implementation_->orderingAlgorithm_->clone());
-#else
-    ret->setOrderingAlgorithm(implementation_->orderingAlgorithm_->cloneOrderingAlgorithm());
-#endif
-
     return ret;
 }
 
-std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t) const
 {
     const htd::LibraryInstance & managementInstance = *managementInstance_;
 

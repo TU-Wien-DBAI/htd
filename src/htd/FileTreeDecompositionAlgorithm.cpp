@@ -101,11 +101,6 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The string containing the decompostion in td format.
-     */
-    std::string decomposition_;
-
-    /**
      *  The management instance to which the current object instance belongs.
      */
     const htd::LibraryInstance * managementInstance_;
@@ -124,6 +119,11 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *  The manipuation operations which are applied after the decomposition was computed.
      */
     std::vector<htd::ITreeDecompositionManipulationOperation *> postProcessingOperations_;
+
+    /**
+     *  The string containing the decompostion in td format.
+     */
+    std::string decomposition_;
 
     /**
      *  Compute a new mutable tree decompostion of the given graph.
@@ -313,11 +313,6 @@ htd::ITreeDecomposition * htd::FileTreeDecompositionAlgorithm::computeDecomposit
     va_end(arguments);
 
     return computeDecomposition(graph, preprocessedGraph, manipulationOperations);
-}
-
-void htd::FileTreeDecompositionAlgorithm::setOrderingAlgorithm(htd::IOrderingAlgorithm * algorithm)
-{
-    implementation_->baseAlgorithm_->setOrderingAlgorithm(algorithm);
 }
 
 void htd::FileTreeDecompositionAlgorithm::setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
