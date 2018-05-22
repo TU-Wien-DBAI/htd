@@ -30,32 +30,8 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
-    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
+    Implementation(const htd::LibraryInstance * const manager, const std::string & decomposition) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), decomposition_(decomposition)
     {
-        std::ifstream fileIn(decomposition);
-        if (!fileIn)
-        {
-            this->decomposition_ = std::string(decomposition);
-        }
-        else
-        {
-            std::string inputLine;
-
-            std::ifstream fileIn(decomposition);
-
-            std::stringbuf treeD;
-
-            while (getline(fileIn, inputLine))
-            {
-                treeD.sputn(inputLine.c_str(), inputLine.size());
-
-                treeD.sputn("\n", 1);
-            }
-            this->decomposition_ = std::string(treeD.str());
-
-            fileIn.close();
-        }
-
         baseAlgorithm_ = new htd::FileGraphDecompositionAlgorithm(manager, this->decomposition_);
     }
 
@@ -64,7 +40,7 @@ struct htd::FileTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] original The original implementation details structure.
      */
-    Implementation(const Implementation & original) : decomposition_(original.decomposition_), managementInstance_(original.managementInstance_), baseAlgorithm_(original.baseAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_()
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), baseAlgorithm_(original.baseAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_(), decomposition_(original.decomposition_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
