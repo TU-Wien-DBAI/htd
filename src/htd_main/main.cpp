@@ -79,6 +79,10 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(inputPathOption, "Input-Specific Options");
 
+        htd_cli::SingleValueOption * commandOption = new htd_cli::SingleValueOption("command", "Execute an external decomposer with <command>.", "command");
+
+        manager->registerOption(commandOption, "Input-Specific Options");
+
         htd_cli::Choice * outputFormatChoice = new htd_cli::Choice("output", "Set the output format of the decomposition to <format>.\n  (See https://github.com/mabseher/htd/blob/master/FORMATS.md for information about the available output formats.)", "format");
 
         outputFormatChoice->addPossibility("td", "Use the output format 'td'.");
@@ -624,6 +628,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("decomp");
 
+        const htd_cli::SingleValueOption & externalOption = optionManager->accessSingleValueOption("command");
+
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
 
         const std::string & outputFormat = outputFormatChoice.value();
@@ -710,9 +716,17 @@ int main(int argc, const char * const * const argv)
             if (!error)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
-                if (pathOption.used())
+                if (externalOption.used())
                 {
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
+                    htd::ExternalTreeDecompositionAlgorithm * algorithm = new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value());
+
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(algorithm);
+                }
+                else if (pathOption.used())
+                {
+                    htd::FileTreeDecompositionAlgorithm * algorithm = new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value());
+
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(algorithm);
                 }
                 else if (std::string(optimizationChoice.value()) == "width")
                 {

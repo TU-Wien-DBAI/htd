@@ -249,5 +249,6 @@
 #include <htd/WeakNormalizationOperation.hpp>
 #include <htd/WidthMinimizingTreeDecompositionAlgorithm.hpp>
 #include <htd/WidthReductionOperation.hpp>
+#include <htd/ExternalTreeDecompositionAlgorithm.hpp>
 
 #endif /* HTD_HTD_MAIN_HPP */
