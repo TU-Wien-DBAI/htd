@@ -115,6 +115,10 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(printProgressOption, "Output-Specific Options");
 
+        htd_cli::Option * normalizeOption = new htd_cli::Option("normalize", "Normalize the decomposition.");
+
+        manager->registerOption(normalizeOption, "Output-Specific Options");
+
         htd_cli::Choice * strategyChoice = new htd_cli::Choice("strategy", "Set the decomposition strategy which shall be used to <algorithm>.", "algorithm");
 
         strategyChoice->addPossibility("random", "Use a random vertex ordering.");
@@ -662,13 +666,17 @@ int main(int argc, const char * const * const argv)
 
         bool hypertreeDecompositionRequested = decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) == "hypertree";
 
+        const htd_cli::Choice & normalizeChoice = optionManager->accessChoice("normalize");
+
+        htd::ITreeDecompositionAlgorithm * decompAlgorithm;
+
         if (std::string(strategyChoice.value()) == "min-separator")
         {
             htd::SeparatorBasedTreeDecompositionAlgorithm * treeDecompositionAlgorithm = new htd::SeparatorBasedTreeDecompositionAlgorithm(libraryInstance);
 
             treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
 
-            libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
+            decompAlgorithm = treeDecompositionAlgorithm;
         }
         else
         {
@@ -676,7 +684,7 @@ int main(int argc, const char * const * const argv)
 
             treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
 
-            libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
+            decompAlgorithm = treeDecompositionAlgorithm;
         }
 
         if (hypertreeDecompositionRequested)
@@ -856,8 +864,13 @@ int main(int argc, const char * const * const argv)
 
                     algorithm->setComputeInducedEdgesEnabled(false);
 
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(algorithm);
+                    decompAlgorithm=algorithm;
                 }
+
+                if (normalizeChoice.used()) decompAlgorithm->addManipulationOperation(new htd::NormalizationOperation(libraryInstance, true, true, true, true));
+
+                libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(decompAlgorithm);
+
 
                 htd::GraphPreprocessor * preprocessor = new htd::GraphPreprocessor(libraryInstance);
 
