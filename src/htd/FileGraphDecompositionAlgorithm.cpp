@@ -517,7 +517,7 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
         while (getline(ss, line))
         {
             //ignore empty line
-            if (line.length() > 0)
+            if (line.length() > 1)
             {
                 char type = line.at(0);
                 switch (type)

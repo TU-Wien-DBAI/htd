@@ -22,11 +22,12 @@
 
 #include <unistd.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <poll.h>
+#include <fcntl.h>
 
 /**
  *  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
@@ -39,7 +40,7 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
-    Implementation(const htd::LibraryInstance * const manager, const std::string cmd) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), cmd_(cmd)
+    Implementation(const htd::LibraryInstance * const manager, char ** cmd, __useconds_t timeout) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), cmd_(cmd), timeout_(timeout)
     {
 
     }
@@ -49,7 +50,7 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] original The original implementation details structure.
      */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -86,7 +87,9 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     /**
      *  The string containing the decompostion in td format.
      */
-    std::string cmd_;
+    char ** cmd_;
+
+    __useconds_t timeout_;
 
     /**
      *  The management instance to which the current object instance belongs.
@@ -123,12 +126,12 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     std::string convert(const IMultiHypergraph & graph) const;
 };
 
-htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::string & cmd) : implementation_(new Implementation(manager, cmd))
+htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, char ** cmd, __useconds_t timeout) : implementation_(new Implementation(manager, cmd, timeout))
 {
 
 }
 
-htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, const std::string & cmd) : implementation_(new Implementation(manager, cmd))
+htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, char ** cmd, __useconds_t timeout) : implementation_(new Implementation(manager, cmd, timeout))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -428,8 +431,8 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTreeDecomp
     int outpipefd[2];
     char buf[256];
 
-    pipe(inpipefd);
-    pipe(outpipefd);
+    pipe2(inpipefd, O_NONBLOCK);
+    pipe2(outpipefd, O_NONBLOCK);
     pid = fork();
 
     if (pid == 0)
@@ -437,26 +440,36 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTreeDecomp
         dup2(outpipefd[0], STDIN_FILENO);
         close(outpipefd[1]);
         dup2(inpipefd[1], STDOUT_FILENO);
-        dup2(inpipefd[1], STDERR_FILENO);
         close(inpipefd[0]);
 
-        execl("/bin/sh", "/bin/sh", "-c", cmd_.c_str(), (char *)NULL);
+        execvp(cmd_[0], cmd_);
         _Exit(0);
     }
-
     //close unused pipe ends
     close(outpipefd[0]);
     close(inpipefd[1]);
     write(outpipefd[1], graphString, strlen(graphString));
     close(outpipefd[1]);
 
-    ssize_t outputLen = 256;
+    ssize_t outputLen = -1;
 
-    while (outputLen != 0)
+    long starttime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    while (true)
     {
+        if(outputLen<0){
+            usleep(200000);
+        }
         outputLen = read(inpipefd[0], buf, 256);
-        decompString.append(buf, outputLen);
-
+        if (outputLen > 0)
+        {
+            decompString.append(buf, outputLen);
+        }
+        else if (outputLen == 0)
+        { break; }
+        else if (timeout_ > 0 && (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - starttime) > timeout_)
+        {
+            kill(pid, SIGTERM);
+        }
     }
     close(inpipefd[0]);
 

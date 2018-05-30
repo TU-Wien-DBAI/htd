@@ -31,6 +31,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <wordexp.h>
 
 htd::LibraryInstance * const libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
 
@@ -82,6 +83,10 @@ htd_cli::OptionManager * createOptionManager(void)
         htd_cli::SingleValueOption * commandOption = new htd_cli::SingleValueOption("command", "Execute an external decomposer with <command>.", "command");
 
         manager->registerOption(commandOption, "Input-Specific Options");
+
+        htd_cli::SingleValueOption * timeoutCOption = new htd_cli::SingleValueOption("timeoutC", "Set a timeout for an external decomposer int milliseconds with <timeoutC>.", "timeoutC");
+
+        manager->registerOption(timeoutCOption, "Input-Specific Options");
 
         htd_cli::Choice * outputFormatChoice = new htd_cli::Choice("output", "Set the output format of the decomposition to <format>.\n  (See https://github.com/mabseher/htd/blob/master/FORMATS.md for information about the available output formats.)", "format");
 
@@ -630,6 +635,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & externalOption = optionManager->accessSingleValueOption("command");
 
+        const htd_cli::SingleValueOption & timeoutCOption = optionManager->accessSingleValueOption("timeoutC");
+
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
 
         const std::string & outputFormat = outputFormatChoice.value();
@@ -718,15 +725,17 @@ int main(int argc, const char * const * const argv)
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
                 if (externalOption.used())
                 {
-                    htd::ExternalTreeDecompositionAlgorithm * algorithm = new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value());
+                    wordexp_t p;
+                    char ** w;
 
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(algorithm);
+                    wordexp(externalOption.value(), &p, 0);
+                    w = p.we_wordv;
+
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, w, timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                 }
                 else if (pathOption.used())
                 {
-                    htd::FileTreeDecompositionAlgorithm * algorithm = new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value());
-
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(algorithm);
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
                 }
                 else if (std::string(optimizationChoice.value()) == "width")
                 {
