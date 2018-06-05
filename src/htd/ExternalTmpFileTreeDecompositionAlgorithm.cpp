@@ -12,7 +12,7 @@
 #include <htd/CompressionOperation.hpp>
 #include <htd/BreadthFirstGraphTraversal.hpp>
 #include <htd/GraphPreprocessorFactory.hpp>
-#include <htd/ExternalTreeDecompositionAlgorithm.hpp>
+#include <htd/ExternalTmpFileTreeDecompositionAlgorithm.hpp>
 
 #include <cstdarg>
 #include <sstream>
@@ -29,12 +29,11 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <wordexp.h>
-#include <thread>
 
 /**
  *  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
  */
-struct htd::ExternalTreeDecompositionAlgorithm::Implementation
+struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
 {
     /**
      *  Constructor for the implementation details structure.
@@ -42,7 +41,7 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
-    Implementation(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout)
+    Implementation(const htd::LibraryInstance * const manager, const std::string & cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile)
     {
         wordexp_t p;
         wordexp(cmd.c_str(), &p, 0);
@@ -54,7 +53,7 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] original The original implementation details structure.
      */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -93,6 +92,10 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
      */
     char ** cmd_;
 
+    std::string decompFilePath_;
+
+    std::string graphFilePath_;
+
     __useconds_t timeout_;
 
     /**
@@ -130,42 +133,42 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     std::string convert(const IMultiHypergraph & graph) const;
 };
 
-htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout) : implementation_(new Implementation(manager, cmd, timeout))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
 
 }
 
-htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, __useconds_t timeout) : implementation_(new Implementation(manager, cmd, timeout))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
     setManipulationOperations(manipulationOperations);
 }
 
-htd::ExternalTreeDecompositionAlgorithm::ExternalTreeDecompositionAlgorithm(const htd::ExternalTreeDecompositionAlgorithm & original) : implementation_(new Implementation(*(original.implementation_)))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::ExternalTmpFileTreeDecompositionAlgorithm & original) : implementation_(new Implementation(*(original.implementation_)))
 {
 
 }
 
-htd::ExternalTreeDecompositionAlgorithm::~ExternalTreeDecompositionAlgorithm()
+htd::ExternalTmpFileTreeDecompositionAlgorithm::~ExternalTmpFileTreeDecompositionAlgorithm()
 {
 
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph) const
 {
     return computeDecomposition(graph, std::vector<htd::IDecompositionManipulationOperation *>());
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
     return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     return computeDecomposition(graph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     htd::IGraphPreprocessor * preprocessor = implementation_->managementInstance_->graphPreprocessorFactory().createInstance();
 
@@ -180,22 +183,22 @@ std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecomposition
     return ret;
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph) const
 {
     return computeDecomposition(graph, preprocessedGraph, std::vector<htd::IDecompositionManipulationOperation *>());
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
     return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1).first;
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     return computeDecomposition(graph, preprocessedGraph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     std::pair<htd::IMutableTreeDecomposition *, std::size_t> ret = implementation_->computeMutableDecomposition(graph, preprocessedGraph, maxBagSize, maxIterationCount);
 
@@ -271,7 +274,7 @@ std::pair<htd::ITreeDecomposition *, std::size_t> htd::ExternalTreeDecomposition
     return ret;
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, int manipulationOperationCount, ...) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, int manipulationOperationCount, ...) const
 {
     va_list arguments;
 
@@ -289,7 +292,7 @@ htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomp
     return computeDecomposition(graph, manipulationOperations);
 }
 
-htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, int manipulationOperationCount, ...) const
+htd::ITreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, int manipulationOperationCount, ...) const
 {
     va_list arguments;
 
@@ -307,7 +310,7 @@ htd::ITreeDecomposition * htd::ExternalTreeDecompositionAlgorithm::computeDecomp
     return computeDecomposition(graph, preprocessedGraph, manipulationOperations);
 }
 
-void htd::ExternalTreeDecompositionAlgorithm::setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
 {
     for (auto & labelingFunction : implementation_->labelingFunctions_)
     {
@@ -326,7 +329,7 @@ void htd::ExternalTreeDecompositionAlgorithm::setManipulationOperations(const st
     addManipulationOperations(manipulationOperations);
 }
 
-void htd::ExternalTreeDecompositionAlgorithm::addManipulationOperation(htd::IDecompositionManipulationOperation * manipulationOperation)
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::addManipulationOperation(htd::IDecompositionManipulationOperation * manipulationOperation)
 {
     bool assigned = false;
 
@@ -354,7 +357,7 @@ void htd::ExternalTreeDecompositionAlgorithm::addManipulationOperation(htd::IDec
     }
 }
 
-void htd::ExternalTreeDecompositionAlgorithm::addManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::addManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
 {
     for (htd::IDecompositionManipulationOperation * operation : manipulationOperations)
     {
@@ -362,39 +365,39 @@ void htd::ExternalTreeDecompositionAlgorithm::addManipulationOperations(const st
     }
 }
 
-bool htd::ExternalTreeDecompositionAlgorithm::isSafelyInterruptible(void) const
+bool htd::ExternalTmpFileTreeDecompositionAlgorithm::isSafelyInterruptible(void) const
 {
     return false;
 }
 
-const htd::LibraryInstance * htd::ExternalTreeDecompositionAlgorithm::managementInstance(void) const HTD_NOEXCEPT
+const htd::LibraryInstance * htd::ExternalTmpFileTreeDecompositionAlgorithm::managementInstance(void) const HTD_NOEXCEPT
 {
-    return implementation_->managementInstance_;
+return implementation_->managementInstance_;
 }
 
-void htd::ExternalTreeDecompositionAlgorithm::setManagementInstance(const htd::LibraryInstance * const manager)
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::setManagementInstance(const htd::LibraryInstance * const manager)
 {
     HTD_ASSERT(manager != nullptr)
 
     implementation_->managementInstance_ = manager;
 }
 
-bool htd::ExternalTreeDecompositionAlgorithm::isComputeInducedEdgesEnabled(void) const
+bool htd::ExternalTmpFileTreeDecompositionAlgorithm::isComputeInducedEdgesEnabled(void) const
 {
     return implementation_->computeInducedEdges_;
 }
 
-void htd::ExternalTreeDecompositionAlgorithm::setComputeInducedEdgesEnabled(bool computeInducedEdgesEnabled)
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::setComputeInducedEdgesEnabled(bool computeInducedEdgesEnabled)
 {
     implementation_->computeInducedEdges_ = computeInducedEdgesEnabled;
 }
 
-htd::ExternalTreeDecompositionAlgorithm * htd::ExternalTreeDecompositionAlgorithm::clone(void) const
+htd::ExternalTmpFileTreeDecompositionAlgorithm * htd::ExternalTmpFileTreeDecompositionAlgorithm::clone(void) const
 {
-    return new htd::ExternalTreeDecompositionAlgorithm(*this);
+    return new htd::ExternalTmpFileTreeDecompositionAlgorithm(*this);
 }
 
-std::string htd::ExternalTreeDecompositionAlgorithm::Implementation::convert(const htd::IMultiHypergraph & graph) const
+std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::convert(const htd::IMultiHypergraph & graph) const
 {
     std::unordered_map<htd::vertex_t, std::size_t> indices;
     std::string graphString;
@@ -424,59 +427,67 @@ std::string htd::ExternalTreeDecompositionAlgorithm::Implementation::convert(con
     return graphString;
 }
 
-std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
-    const char * graphString = convert(graph).c_str();
+    const std::string graphString = convert(graph);
 
-    std::string decompString;
+    //write graph to file
+    std::ofstream graphFile(graphFilePath_);
 
-    int inpipefd[2];
-    int outpipefd[2];
-    char buf[256];
+    graphFile << graphString;
 
-    pipe(inpipefd);
-    pipe(outpipefd);
-    pid_t pid_solver = fork();
+    graphFile.close();
 
-    if (pid_solver == 0)
+    pid_t pid = 0;
+
+    pid_t pid_ = 0;
+
+    pid = fork();
+
+    if (pid == 0)
     {
-        dup2(outpipefd[0], STDIN_FILENO);
-        close(outpipefd[1]);
+        int inpipefd[2];
+        pipe(inpipefd);
+
+        dup2(inpipefd[1], STDIN_FILENO);
+        dup2(inpipefd[1], STDERR_FILENO);
         dup2(inpipefd[1], STDOUT_FILENO);
-        close(inpipefd[0]);
 
         execvp(cmd_[0], cmd_);
+
         _Exit(0);
     }
 
-    //close unused pipe ends
-    close(outpipefd[0]);
-    close(inpipefd[1]);
-    write(outpipefd[1], graphString, strlen(graphString));
-    close(outpipefd[1]);
+    pid_ = fork();
 
-    pid_t pid_watcher = fork();
-    if(pid_watcher==0){
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeout_));
-        kill(pid_solver, SIGTERM);
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        kill(pid_solver, SIGKILL);
-    }
-
-    ssize_t outputLen = 256;
-
-    while (outputLen > 0)
+    if (pid_ == 0)
     {
-        outputLen = read(inpipefd[0], buf, 256);
-        decompString.append(buf, outputLen);
+        usleep(timeout_ * 1000);
+
+        kill(pid, SIGTERM);
+
+        usleep(1000000);
+
+        kill(pid, SIGKILL);
+
+        _Exit(0);
     }
 
-    close(inpipefd[0]);
+    waitpid(pid, 0, 0);
 
-    kill(pid_watcher, SIGKILL);
+    //read decomposition from file
+    std::ifstream decompFile(decompFilePath_);
 
-    // call File Tree Decomposition Algorithm
+    decompFile.seekg(0, std::ios::end);
+
+    long size = decompFile.tellg();
+
+    std::string decompString(size, ' ');
+
+    decompFile.seekg(0);
+
+    decompFile.read(&decompString[0], size);
+
     FileTreeDecompositionAlgorithm algorithm(managementInstance_, decompString);
 
     ITreeDecomposition * treeDecomposition = algorithm.computeDecomposition(graph);
@@ -485,5 +496,6 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTreeDecomp
 
     return std::make_pair(&mutableTreeDecomposition, (size_t)0);
 }
+
 
 #endif /* HTD_TRELLISTREEDECOMPOSITIONALGORITHM_CPP */

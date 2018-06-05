@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <iostream>
 #include <wordexp.h>
+#include <htd/ExternalTmpFileTreeDecompositionAlgorithm.hpp>
 
 htd::LibraryInstance * const libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
 
@@ -83,6 +84,18 @@ htd_cli::OptionManager * createOptionManager(void)
         htd_cli::SingleValueOption * commandOption = new htd_cli::SingleValueOption("command", "Execute an external decomposer with <command>.", "command");
 
         manager->registerOption(commandOption, "Input-Specific Options");
+
+        htd_cli::SingleValueOption * commandFileOption = new htd_cli::SingleValueOption("commandF", "Execute an external decomposer with <command>.", "commandF");
+
+        manager->registerOption(commandFileOption, "Input-Specific Options");
+
+        htd_cli::SingleValueOption * graphFileOption = new htd_cli::SingleValueOption("gPath", "tmp File for graph <path>.", "gPath");
+
+        manager->registerOption(graphFileOption, "Input-Specific Options");
+
+        htd_cli::SingleValueOption * decompFileOption = new htd_cli::SingleValueOption("dPath", "tmp file for decomp <path>.", "dPath");
+
+        manager->registerOption(decompFileOption, "Input-Specific Options");
 
         htd_cli::SingleValueOption * timeoutCOption = new htd_cli::SingleValueOption("timeoutC", "Set a timeout for an external decomposer int milliseconds with <timeoutC>.", "timeoutC");
 
@@ -635,6 +648,12 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & externalOption = optionManager->accessSingleValueOption("command");
 
+        const htd_cli::SingleValueOption & externalFileOption = optionManager->accessSingleValueOption("commandF");
+
+        const htd_cli::SingleValueOption & graphFileOption = optionManager->accessSingleValueOption("gPath");
+
+        const htd_cli::SingleValueOption & decompFileOption = optionManager->accessSingleValueOption("dPath");
+
         const htd_cli::SingleValueOption & timeoutCOption = optionManager->accessSingleValueOption("timeoutC");
 
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
@@ -723,15 +742,13 @@ int main(int argc, const char * const * const argv)
             if (!error)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
-                if (externalOption.used())
+                if (externalFileOption.used())
                 {
-                    wordexp_t p;
-                    char ** w;
-
-                    wordexp(externalOption.value(), &p, 0);
-                    w = p.we_wordv;
-
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, w, timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0,graphFileOption.value(),decompFileOption.value()));
+                }
+                else if (externalOption.used())
+                {
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                 }
                 else if (pathOption.used())
                 {
