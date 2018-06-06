@@ -752,16 +752,18 @@ int main(int argc, const char * const * const argv)
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
                 if (externalFileOption.used())
                 {
-                    //TODO error if file is missing
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0, graphFileOption.value(), decompFileOption.value()));
+                    if(!graphFileOption.used()||!decompFileOption.used()){
+                        //TODO ERROR
+                    }
+                    decompAlgorithm = (new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0, graphFileOption.value(), decompFileOption.value()));
                 }
                 else if (externalOption.used())
                 {
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                    decompAlgorithm = (new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                 }
                 else if (pathOption.used())
                 {
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
+                    decompAlgorithm = (new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
                 }
                 else if (std::string(optimizationChoice.value()) == "width")
                 {
@@ -864,7 +866,7 @@ int main(int argc, const char * const * const argv)
 
                     algorithm->setComputeInducedEdgesEnabled(false);
 
-                    decompAlgorithm=algorithm;
+                    decompAlgorithm = algorithm;
                 }
 
                 if (normalizeChoice.used()) decompAlgorithm->addManipulationOperation(new htd::NormalizationOperation(libraryInstance, true, true, true, true));
