@@ -11,13 +11,13 @@
 namespace htd
 {
     /**
-     *  Default implementation of the IGraphDecompositionAlgorithm interface to read decompostions from files.
+     *  TODO
      */
     class ExternalTmpFileTreeDecompositionAlgorithm : public htd::ITreeDecompositionAlgorithm
     {
         public:
             /**
-             *  Constructor for a graph decomposition algorithm which reads a decomposition from a file.
+             *  TODO
              *
              *  @param[in] manager          The management instance to which the new algorithm belongs.
              *  @param[in] decompostion     String containing the decomposition or the path to the file containing the decomposition.
@@ -25,7 +25,7 @@ namespace htd
             HTD_API ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile);
 
             /**
-             *  Constructor for a graph decomposition algorithm which reads a decomposition from a file.
+             *  TODO
              *
              *  @note When calling this method the control over the memory regions of the manipulation operations is transferred to the
              *  decomposition algorithm. Deleting a manipulation operation provided to this method outside the decomposition algorithm

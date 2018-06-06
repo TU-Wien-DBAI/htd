@@ -19,7 +19,7 @@
 #include <fstream>
 #include <htd/FileTreeDecompositionAlgorithm.hpp>
 #include <htd_io/GrFormatExporter.hpp>
-
+#include <utility>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -41,11 +41,8 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
      *  @param[in] manager          The management instance to which the current object instance belongs.
      *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
      */
-    Implementation(const htd::LibraryInstance * const manager, const std::string & cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile)
+    Implementation(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile), cmd_(std::move(cmd))
     {
-        wordexp_t p;
-        wordexp(cmd.c_str(), &p, 0);
-        cmd_ = p.we_wordv;
     }
 
     /**
@@ -88,17 +85,6 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The string containing the decompostion in td format.
-     */
-    char ** cmd_;
-
-    std::string decompFilePath_;
-
-    std::string graphFilePath_;
-
-    __useconds_t timeout_;
-
-    /**
      *  The management instance to which the current object instance belongs.
      */
     const htd::LibraryInstance * managementInstance_;
@@ -112,6 +98,27 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
      *  The manipuation operations which are applied after the decomposition was computed.
      */
     std::vector<htd::ITreeDecompositionManipulationOperation *> postProcessingOperations_;
+
+    /**
+     * TODO
+     */
+    __useconds_t timeout_;
+
+    /**
+     * TODO
+     */
+    std::string graphFilePath_;
+
+    /**
+     * TODO
+     */
+    std::string decompFilePath_;
+
+    /**
+     * TODO
+     */
+    std::string cmd_;
+
 
     /**
      *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
@@ -372,7 +379,7 @@ bool htd::ExternalTmpFileTreeDecompositionAlgorithm::isSafelyInterruptible(void)
 
 const htd::LibraryInstance * htd::ExternalTmpFileTreeDecompositionAlgorithm::managementInstance(void) const HTD_NOEXCEPT
 {
-return implementation_->managementInstance_;
+    return implementation_->managementInstance_;
 }
 
 void htd::ExternalTmpFileTreeDecompositionAlgorithm::setManagementInstance(const htd::LibraryInstance * const manager)
@@ -427,7 +434,7 @@ std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::conv
     return graphString;
 }
 
-std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t) const
 {
     const std::string graphString = convert(graph);
 
@@ -444,33 +451,54 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTre
 
     pid = fork();
 
+    if (pid < 0)
+    {
+        //TODO Error
+    }
+
     if (pid == 0)
     {
         int inpipefd[2];
-        pipe(inpipefd);
+
+        if (pipe(inpipefd) < 0)
+        {
+            //TODO Error
+        };
 
         dup2(inpipefd[1], STDIN_FILENO);
         dup2(inpipefd[1], STDERR_FILENO);
         dup2(inpipefd[1], STDOUT_FILENO);
 
-        execvp(cmd_[0], cmd_);
+        wordexp_t p;
+        wordexp(cmd_.c_str(), &p, 0);
+        char ** cmd = p.we_wordv;
+
+        execvp(cmd[0], cmd);
 
         _Exit(0);
     }
 
-    pid_ = fork();
-
-    if (pid_ == 0)
+    if (timeout_ > 0)
     {
-        usleep(timeout_ * 1000);
+        pid_ = fork();
+        if (pid_ < 0)
+        {
+            //TODO Error
+        }
 
-        kill(pid, SIGTERM);
+        if (pid_ == 0)
+        {
+            usleep(timeout_ * 1000);
 
-        usleep(1000000);
+            kill(pid, SIGTERM);
 
-        kill(pid, SIGKILL);
+            usleep(1000000);
 
-        _Exit(0);
+            kill(pid, SIGKILL);
+
+            _Exit(0);
+        }
+        //TODO kill process
     }
 
     waitpid(pid, 0, 0);

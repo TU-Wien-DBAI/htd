@@ -453,7 +453,7 @@ htd::FileGraphDecompositionAlgorithm * htd::FileGraphDecompositionAlgorithm::clo
     return ret;
 }
 
-std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t) const
+std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t) const
 {
     const htd::LibraryInstance & managementInstance = *managementInstance_;
 

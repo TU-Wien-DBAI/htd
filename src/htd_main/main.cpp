@@ -744,7 +744,8 @@ int main(int argc, const char * const * const argv)
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
                 if (externalFileOption.used())
                 {
-                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0,graphFileOption.value(),decompFileOption.value()));
+                    //TODO error if file is missing
+                    libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0, graphFileOption.value(), decompFileOption.value()));
                 }
                 else if (externalOption.used())
                 {
