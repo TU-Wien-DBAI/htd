@@ -98,6 +98,7 @@ htd_cli::OptionManager * createOptionManager(void)
         strategyChoice->addPossibility("max-cardinality", "Maximum cardinality search ordering algorithm");
         strategyChoice->addPossibility("max-cardinality-enhanced", "Enhanced maximum cardinality search ordering algorithm (MCS-M)");
         strategyChoice->addPossibility("challenge", "Use a combination of different decomposition strategies.");
+		strategyChoice->addPossibility("new-min-separator", "Tree decomposition via minimal separator");
 
         strategyChoice->setDefaultValue("min-fill");
 
