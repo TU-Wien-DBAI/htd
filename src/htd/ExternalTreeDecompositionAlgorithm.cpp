@@ -28,8 +28,8 @@
 #include <thread>
 
 /**
- *  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
- */
+*  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
+*/
 struct htd::ExternalTreeDecompositionAlgorithm::Implementation
 {
     /**
@@ -43,10 +43,10 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  Copy constructor for the implementation details structure.
-     *
-     *  @param[in] original The original implementation details structure.
-     */
+    *  Copy constructor for the implementation details structure.
+    *
+    *  @param[in] original The original implementation details structure.
+    */
     Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
@@ -82,28 +82,28 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The management instance to which the current object instance belongs.
-     */
+    *  The management instance to which the current object instance belongs.
+    */
     const htd::LibraryInstance * managementInstance_;
 
     /**
-     *  The labeling functions which are applied after the decomposition was computed.
-     */
+    *  The labeling functions which are applied after the decomposition was computed.
+    */
     std::vector<htd::ILabelingFunction *> labelingFunctions_;
 
     /**
-     *  The manipuation operations which are applied after the decomposition was computed.
-     */
+    *  The manipuation operations which are applied after the decomposition was computed.
+    */
     std::vector<htd::ITreeDecompositionManipulationOperation *> postProcessingOperations_;
 
     /**
-     *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
-     */
+    *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
+    */
     bool computeInducedEdges_;
 
     /**
-     *  TODO
-     */
+    *  The command to call the external solver with.
+    */
     std::string cmd_;
 
     /**
@@ -112,15 +112,15 @@ struct htd::ExternalTreeDecompositionAlgorithm::Implementation
     unsigned int timeout_;
 
     /**
-     *  Compute a new mutable tree decompostion of the given graph.
-     *
-     *  @param[in] graph                The graph which shall be decomposed.
-     *  @param[in] preprocessedGraph    The input graph in preprocessed format.
-     *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-     *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
-     *
-     *  @return A pair consisting of a mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
-     */
+    *  Compute a new mutable tree decompostion of the given graph.
+    *
+    *  @param[in] graph                The graph which shall be decomposed.
+    *  @param[in] preprocessedGraph    The input graph in preprocessed format.
+    *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
+    *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
+    *
+    *  @return A pair consisting of a mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+    */
     std::pair<htd::IMutableTreeDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
     std::string convert(const IMultiHypergraph & graph) const;

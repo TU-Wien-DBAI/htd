@@ -103,17 +103,17 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
     bool computeInducedEdges_;
 
     /**
-     * TODO
+     * A vector of deterministic tree decomposition algorithms.
      */
     std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms_;
 
     /**
-     * TODO
+     * A vector of non deterministic tree decomposition algorithms.
      */
     std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms_;
 
     /**
-     * TODO
+     * A fitness function to compare tree decompositions.
      */
     ITreeDecompositionFitnessFunction * fitnessFunction_;
 
@@ -402,6 +402,10 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FitnessMinimizingT
 
     for (const ITreeDecompositionAlgorithm * deterministicAlgorithm : deterministicAlgorithms_)
     {
+        if (managementInstance_->isTerminated())
+        {
+            break;
+        }
         ITreeDecomposition * tmpDecomp = deterministicAlgorithm->computeDecomposition(graph);
 
         if (decomp == 0 || fitnessFunction_->fitness(graph, *tmpDecomp) < fitnessFunction_->fitness(graph, *decomp))
@@ -414,8 +418,16 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FitnessMinimizingT
 
     for (std::size_t i = 0; i < maxIterationCount; i++)
     {
+        if (managementInstance_->isTerminated())
+        {
+            break;
+        }
         for (const ITreeDecompositionAlgorithm * nonDeterministicAlgorithm : nonDeterministicAlgorithms_)
         {
+            if (managementInstance_->isTerminated())
+            {
+                break;
+            }
             ITreeDecomposition * tmpDecomp = nonDeterministicAlgorithm->computeDecomposition(graph);
 
             if (decomp == 0 || fitnessFunction_->fitness(graph, *tmpDecomp) < fitnessFunction_->fitness(graph, *decomp))

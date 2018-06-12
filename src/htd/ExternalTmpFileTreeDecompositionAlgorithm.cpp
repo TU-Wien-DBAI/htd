@@ -27,25 +27,25 @@
 #include <fcntl.h>
 
 /**
- *  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
- */
+*  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
+*/
 struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
 {
     /**
-     *  Constructor for the implementation details structure.
-     *
-     *  @param[in] manager          The management instance to which the current object instance belongs.
-     *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
-     */
-    Implementation(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile), cmd_(std::move(cmd))
+    *  Constructor for the implementation details structure.
+    *
+    *  @param[in] manager          The management instance to which the current object instance belongs.
+    *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
+    */
+    Implementation(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile), cmd_(std::move(cmd))
     {
     }
 
     /**
-     *  Copy constructor for the implementation details structure.
-     *
-     *  @param[in] original The original implementation details structure.
-     */
+    *  Copy constructor for the implementation details structure.
+    *
+    *  @param[in] original The original implementation details structure.
+    */
     Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
@@ -81,56 +81,56 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     }
 
     /**
-     *  The management instance to which the current object instance belongs.
-     */
+    *  The management instance to which the current object instance belongs.
+    */
     const htd::LibraryInstance * managementInstance_;
 
     /**
-     *  The labeling functions which are applied after the decomposition was computed.
-     */
+    *  The labeling functions which are applied after the decomposition was computed.
+    */
     std::vector<htd::ILabelingFunction *> labelingFunctions_;
 
     /**
-     *  The manipuation operations which are applied after the decomposition was computed.
-     */
+    *  The manipuation operations which are applied after the decomposition was computed.
+    */
     std::vector<htd::ITreeDecompositionManipulationOperation *> postProcessingOperations_;
 
     /**
-     * TODO
-     */
-    __useconds_t timeout_;
+    * The timeout for the command in milliseconds.
+    */
+    unsigned int timeout_;
 
     /**
-     * TODO
-     */
+    * The path to the file which should contain the graph.
+    */
     std::string graphFilePath_;
 
     /**
-     * TODO
-     */
+    * The path to the file which will contain the decomposition.
+    */
     std::string decompFilePath_;
 
     /**
-     * TODO
-     */
+    * The command to call the external solver with.
+    */
     std::string cmd_;
 
 
     /**
-     *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
-     */
+    *  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
+    */
     bool computeInducedEdges_;
 
     /**
-     *  Compute a new mutable tree decompostion of the given graph.
-     *
-     *  @param[in] graph                The graph which shall be decomposed.
-     *  @param[in] preprocessedGraph    The input graph in preprocessed format.
-     *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-     *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
-     *
-     *  @return A pair consisting of a mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
-     */
+    *  Compute a new mutable tree decompostion of the given graph.
+    *
+    *  @param[in] graph                The graph which shall be decomposed.
+    *  @param[in] preprocessedGraph    The input graph in preprocessed format.
+    *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
+    *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
+    *
+    *  @return A pair consisting of a mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+    */
     std::pair<htd::IMutableTreeDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
     void getDecomp() const;
