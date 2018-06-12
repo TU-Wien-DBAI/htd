@@ -20,15 +20,11 @@
 #include <htd/FileTreeDecompositionAlgorithm.hpp>
 #include <htd_io/GrFormatExporter.hpp>
 #include <utility>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <poll.h>
 #include <fcntl.h>
-#include <wordexp.h>
 
 /**
  *  Private implementation details of class htd::FileTreeDecompostionAlgorithm.
@@ -137,15 +133,17 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
      */
     std::pair<htd::IMutableTreeDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 
+    void getDecomp() const;
+
     std::string convert(const IMultiHypergraph & graph) const;
 };
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
 
 }
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, __useconds_t timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -445,6 +443,112 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTre
 
     graphFile.close();
 
+    getDecomp();
+
+    //read decomposition from file
+    std::ifstream decompFile(decompFilePath_);
+
+    decompFile.seekg(0, std::ios::end);
+
+    long size = decompFile.tellg();
+
+    std::string decompString(size, ' ');
+
+    decompFile.seekg(0);
+
+    decompFile.read(&decompString[0], size);
+
+    std::remove(decompFilePath_.c_str());
+
+    std::remove(graphFilePath_.c_str());
+
+    FileTreeDecompositionAlgorithm algorithm(managementInstance_, decompString);
+
+    ITreeDecomposition * treeDecomposition = algorithm.computeDecomposition(graph);
+
+    htd::IMutableTreeDecomposition & mutableTreeDecomposition = managementInstance_->treeDecompositionFactory().accessMutableInstance(*treeDecomposition);
+
+    return std::make_pair(&mutableTreeDecomposition, (size_t)0);
+}
+
+#ifdef _MSC_VER
+
+#include <windows.h>
+#include <tchar.h>
+#include <stdio.h> 
+#include <strsafe.h>
+#pragma comment(lib, "User32.lib")
+
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::getDecomp() const
+{
+    HANDLE g_hChildStd_IN_Rd = NULL;
+
+    HANDLE g_hChildStd_IN_Wr = NULL;
+
+    HANDLE g_hChildStd_OUT_Rd = NULL;
+
+    HANDLE g_hChildStd_OUT_Wr = NULL;
+
+    SECURITY_ATTRIBUTES saAttr;
+
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+
+    saAttr.bInheritHandle = TRUE;
+
+    saAttr.lpSecurityDescriptor = NULL;
+
+    CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0);
+
+    SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0);
+
+    CreatePipe(&g_hChildStd_IN_Rd, &g_hChildStd_IN_Wr, &saAttr, 0);
+
+    SetHandleInformation(g_hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0);
+
+    TCHAR *szCmdline;
+
+    szCmdline = (TCHAR*)malloc(sizeof(char)*(cmd_.length() + 1));
+
+    strcpy(szCmdline, cmd_.c_str());
+
+    PROCESS_INFORMATION piProcInfo;
+
+    STARTUPINFO siStartInfo;
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+    siStartInfo.cb = sizeof(STARTUPINFO);
+    siStartInfo.hStdError = g_hChildStd_OUT_Wr;
+    siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+    siStartInfo.hStdInput = g_hChildStd_IN_Rd;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+    CreateProcess(NULL,
+        szCmdline,     // command line
+        NULL,          // process security attributes
+        NULL,          // primary thread security attributes
+        TRUE,          // handles are inherited
+        0,             // creation flags
+        NULL,          // use parent's environment
+        NULL,          // use parent's current directory
+        &siStartInfo,  // STARTUPINFO pointer
+        &piProcInfo);  // receives PROCESS_INFORMATION
+
+    CloseHandle(piProcInfo.hProcess);
+    CloseHandle(piProcInfo.hThread);
+    CloseHandle(siStartInfo.hStdOutput);
+    WaitForSingleObject(piProcInfo.hProcess, timeout_==0?INFINITE:timeout_);
+}
+
+#elif __GNUC__
+
+#include <unistd.h>
+#include <sys/wait.h>
+#include <poll.h>
+#include <wordexp.h>
+
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::getDecomp() const
+{
     pid_t pid = 0;
 
     pid_t pid_ = 0;
@@ -498,32 +602,11 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::ExternalTmpFileTre
 
             _Exit(0);
         }
-        //TODO kill process
     }
 
     waitpid(pid, 0, 0);
-
-    //read decomposition from file
-    std::ifstream decompFile(decompFilePath_);
-
-    decompFile.seekg(0, std::ios::end);
-
-    long size = decompFile.tellg();
-
-    std::string decompString(size, ' ');
-
-    decompFile.seekg(0);
-
-    decompFile.read(&decompString[0], size);
-
-    FileTreeDecompositionAlgorithm algorithm(managementInstance_, decompString);
-
-    ITreeDecomposition * treeDecomposition = algorithm.computeDecomposition(graph);
-
-    htd::IMutableTreeDecomposition & mutableTreeDecomposition = managementInstance_->treeDecompositionFactory().accessMutableInstance(*treeDecomposition);
-
-    return std::make_pair(&mutableTreeDecomposition, (size_t)0);
 }
 
+#endif
 
 #endif /* HTD_TRELLISTREEDECOMPOSITIONALGORITHM_CPP */

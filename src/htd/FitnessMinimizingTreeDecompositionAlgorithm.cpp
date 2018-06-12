@@ -20,15 +20,11 @@
 #include <htd/FileTreeDecompositionAlgorithm.hpp>
 #include <htd_io/GrFormatExporter.hpp>
 
-#include <unistd.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <poll.h>
 #include <fcntl.h>
-#include <wordexp.h>
 #include <htd/ITreeDecompositionFitnessFunction.hpp>
 
 /**

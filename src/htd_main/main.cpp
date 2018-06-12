@@ -31,7 +31,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <wordexp.h>
 #include <htd/ExternalTmpFileTreeDecompositionAlgorithm.hpp>
 
 htd::LibraryInstance * const libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
