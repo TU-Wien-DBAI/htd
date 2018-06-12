@@ -44,9 +44,9 @@ void htd_io::TdFormatExporter::write(const htd::ITreeDecomposition & decompositi
 {
     std::unordered_map<htd::vertex_t, std::size_t> indices;
 
-    outputStream << "s td " << decomposition.vertexCount() << " " << decomposition.maximumBagSize() << " " << graph.vertexCount() << "\n";
-
     outputStream << "c r " << decomposition.root() << "\n";
+
+    outputStream << "s td " << decomposition.vertexCount() << " " << decomposition.maximumBagSize() << " " << graph.vertexCount() << "\n";
 
     if (decomposition.vertexCount() > 0)
     {
