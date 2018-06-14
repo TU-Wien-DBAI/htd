@@ -77,59 +77,7 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
      *
      *  @return A pair consisting of a mutable graph decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
      */
-    std::pair<htd::IMutableGraphDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t) const;
-
-    /**
-     *  Compute the set union of two sets and store the result in the first set.
-     *
-     *  @param[in,out] set1         The first set
-     *  @param[in] set2             The second set.
-     *  @param[in] ignoredVertex    The vertex which shall be ignored if it occurs in the second set.
-     */
-    void set_union(std::vector<htd::vertex_t> & set1,
-                   const std::vector<htd::vertex_t> & set2,
-                   htd::vertex_t ignoredVertex) const
-    {
-        std::vector<htd::vertex_t> tmp;
-        tmp.reserve(set2.size());
-
-        auto first1 = set1.begin();
-        auto first2 = set2.begin();
-
-        auto last1 = set1.end();
-        auto last2 = set2.end();
-
-        while (first1 != last1 && first2 != last2)
-        {
-            if (*first1 < *first2)
-            {
-                ++first1;
-            }
-            else if (*first2 < *first1)
-            {
-                if (*first2 != ignoredVertex)
-                {
-                    tmp.push_back(*first2);
-                }
-
-                ++first2;
-            }
-            else
-            {
-                ++first1;
-
-                //Skip common value in set 2.
-                ++first2;
-            }
-        }
-
-        std::copy_if(first2, last2, std::back_inserter(tmp), [&](const htd::vertex_t vertex){ return vertex != ignoredVertex; });
-
-        if (!tmp.empty())
-        {
-            htd::inplace_merge(set1, tmp);
-        }
-    }
+    htd::IMutableGraphDecomposition * computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize) const;
 
     /**
      * Parses the given line as edge line of the decomposition.
@@ -142,20 +90,20 @@ struct htd::FileGraphDecompositionAlgorithm::Implementation
     /**
      * Parses the given line as bag line of the decomposition.
      *
-     * @param[in] line          the bag line
-     * @param[in,out] decomp    the decomposition
-     * @param[in] graph         the base graph of the decomposition
-     * @param[in] notfoundEdges         the base graph of the decomposition
+     * @param[in] line              the bag line
+     * @param[in,out] decomp        the decomposition
+     * @param[in] graph             the base graph of the decomposition
+     * @param[in] notfoundEdges     the base graph of the decomposition
      */
     void parseBagLine(std::string line, IMutableGraphDecomposition * decomp, const IMultiHypergraph & graph, std::unordered_set<std::vector<vertex_t>> & notfoundEdges) const;
 
     /**
      * Computes the edges induced by the given bag.
      *
-     * @param[in] bag               the bag of the decomposition
-     * @param[in] graph             the base graph of the decomposition
-     * @param[in,out] inducedEdges  the edges induced by the bag
-     * @param[in,out] notfoundEdges  the edges induced by the bag
+     * @param[in] bag                   the bag of the decomposition
+     * @param[in] graph                 the base graph of the decomposition
+     * @param[in,out] inducedEdges      the edges induced by the bag
+     * @param[in,out] notfoundEdges     the edges induced by the bag
      */
     void getInducedEdges(std::vector<vertex_t> & bag, const IMultiHypergraph & graph, std::vector<index_t> & inducedEdges, std::unordered_set<std::vector<vertex_t>> & notfoundEdges) const;
 };
@@ -182,22 +130,21 @@ htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecompos
 
 htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1).first;
+    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1);
 }
 
-std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize) const
 {
-    return computeDecomposition(graph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
+    return computeDecomposition(graph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize);
 }
 
-std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const
 {
     htd::IGraphPreprocessor * preprocessor = implementation_->managementInstance_->graphPreprocessorFactory().createInstance();
 
     htd::IPreprocessedGraph * preprocessedGraph = preprocessor->prepare(graph);
 
-    std::pair<htd::IGraphDecomposition *, std::size_t> ret =
-        computeDecomposition(graph, *preprocessedGraph, manipulationOperations, maxBagSize, maxIterationCount);
+    htd::IGraphDecomposition * ret = computeDecomposition(graph, *preprocessedGraph, manipulationOperations, maxBagSize);
 
     delete preprocessedGraph;
     delete preprocessor;
@@ -212,19 +159,19 @@ htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecompos
 
 htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1).first;
+    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1);
 }
 
-std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize) const
 {
-    return computeDecomposition(graph, preprocessedGraph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
+    return computeDecomposition(graph, preprocessedGraph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize);
 }
 
-std::pair<htd::IGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::IGraphDecomposition * htd::FileGraphDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const
 {
-    std::pair<htd::IMutableGraphDecomposition *, std::size_t> ret = implementation_->computeMutableDecomposition(graph, preprocessedGraph, maxBagSize, maxIterationCount);
+    htd::IMutableGraphDecomposition * ret = implementation_->computeMutableDecomposition(graph, preprocessedGraph, maxBagSize);
 
-    htd::IMutableGraphDecomposition * decomposition = ret.first;
+    htd::IMutableGraphDecomposition * decomposition = ret;
 
     if (decomposition != nullptr)
     {
@@ -453,13 +400,11 @@ htd::FileGraphDecompositionAlgorithm * htd::FileGraphDecompositionAlgorithm::clo
     return ret;
 }
 
-std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t) const
+htd::IMutableGraphDecomposition * htd::FileGraphDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize) const
 {
     const htd::LibraryInstance & managementInstance = *managementInstance_;
 
     htd::IMutableGraphDecomposition * decomposition = managementInstance.graphDecompositionFactory().createInstance();
-
-    std::size_t iterations = 0;
 
     std::size_t size = graph.vertexCount();
 
@@ -563,31 +508,27 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
 
                 decomposition = nullptr;
 
-                return std::make_pair(decomposition, iterations);
+                return decomposition;
             }
         }
 
         // check edges
-        if (notfoundEdges.size() > 0)
+        if (!notfoundEdges.empty())
         {
             delete decomposition;
 
             decomposition = nullptr;
 
-            return std::make_pair(decomposition, iterations);
+            return decomposition;
         };
 
-        // check bag size
-        for (ConstIterator<vertex_t> iter_decomp = decomposition->vertices().begin(); iter_decomp != decomposition->vertices().end(); ++iter_decomp)
+        if (decomposition->maximumBagSize() > maxBagSize)
         {
-            if (decomposition->mutableBagContent(*iter_decomp).size() > maxBagSize)
-            {
-                delete decomposition;
+            delete decomposition;
 
-                decomposition = nullptr;
+            decomposition = nullptr;
 
-                return std::make_pair(decomposition, iterations);
-            };
+            return decomposition;
         }
     }
     else
@@ -597,7 +538,7 @@ std::pair<htd::IMutableGraphDecomposition *, std::size_t> htd::FileGraphDecompos
             decomposition->addVertex();
         }
     }
-    return std::make_pair(decomposition, iterations);
+    return decomposition;
 }
 
 void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::string line, IMutableGraphDecomposition * decomp, const IMultiHypergraph & graph, std::unordered_set<std::vector<vertex_t>> & notfoundEdges) const

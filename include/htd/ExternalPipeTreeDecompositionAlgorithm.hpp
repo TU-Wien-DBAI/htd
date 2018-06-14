@@ -1,5 +1,5 @@
-#ifndef HTD_EXTERNALTREEDECOMPOSITIONALGORITHM_HPP
-#define HTD_EXTERNALTREEDECOMPOSITIONALGORITHM_HPP
+#ifndef HTD_EXTERNALPIPETREEDECOMPOSITIONALGORITHM_HPP
+#define HTD_EXTERNALPIPETREEDECOMPOSITIONALGORITHM_HPP
 
 #include <htd/Globals.hpp>
 #include <htd/ITreeDecompositionAlgorithm.hpp>
@@ -7,13 +7,14 @@
 #include <htd/IPreprocessedGraph.hpp>
 
 #include <utility>
+#include <htd/IExternalTreeDecompositionAlgorithm.hpp>
 
 namespace htd
 {
     /**
-     *  Default implementation of the ITreeDecompositionAlgorithm interface which calls an external decomposer.
+     *  Default implementation of the IExternalTreeDecompositionAlgorithm interface which calls an external decomposer and communicates via stdin and stdout.
      */
-    class ExternalTreeDecompositionAlgorithm : public htd::ITreeDecompositionAlgorithm
+    class ExternalPipeTreeDecompositionAlgorithm : public htd::IExternalTreeDecompositionAlgorithm
     {
         public:
             /**
@@ -23,7 +24,7 @@ namespace htd
              *  @param[in] cmd              The command used to call the external solver.
              *  @param[in] timeout          The timeout for the external solver in milliseconds.
              */
-            HTD_API ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout);
+            HTD_API ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout);
 
             /**
              *  Constructor for a tree decomposition algorithm which calls an external decomposer.
@@ -37,16 +38,16 @@ namespace htd
              *  @param[in] cmd                      The command used to call the external solver.
              *  @param[in] timeout                  The timeout for the external solver in milliseconds.
              */
-            HTD_API ExternalTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout);
+            HTD_API ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout);
 
             /**
-             *  Copy constructor for a htd::TrellisTreeDecompositionAlgorithm object.
+             *  Copy constructor for a htd::ExternalPipeTreeDecompositionAlgorithm object.
              *
-             *  @param[in] original The original htd::TrellisTreeDecompositionAlgorithm object.
+             *  @param[in] original The original htd::ExternalPipeTreeDecompositionAlgorithm object.
              */
-            HTD_API ExternalTreeDecompositionAlgorithm(const htd::ExternalTreeDecompositionAlgorithm & original);
+            HTD_API ExternalPipeTreeDecompositionAlgorithm(const htd::ExternalPipeTreeDecompositionAlgorithm & original);
 
-            HTD_API virtual ~ExternalTreeDecompositionAlgorithm();
+            HTD_API virtual ~ExternalPipeTreeDecompositionAlgorithm();
 
             HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph) const HTD_OVERRIDE;
 
@@ -73,14 +74,13 @@ namespace htd
              *
              *  @param[in] graph                The input graph to decompose.
              *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-             *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
              *
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
-            HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
+            HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize) const;
 
             /**
              *  Compute a decomposition of the given graph and apply the given manipulation operations to it. The manipulation operations are applied in the given order.
@@ -88,7 +88,6 @@ namespace htd
              *  @param[in] graph                    The input graph to decompose.
              *  @param[in] manipulationOperations   The manipulation operations which shall be applied.
              *  @param[in] maxBagSize               The upper bound for the maximum bag size of the decomposition.
-             *  @param[in] maxIterationCount        The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
              *
              *  @note The manipulation operations provided to this function are applied right after the manipulation operations defined globally for the algorithm.
              *
@@ -99,9 +98,9 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
-            HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const;
+            HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const;
 
             HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph) const HTD_OVERRIDE;
 
@@ -130,14 +129,13 @@ namespace htd
              *  @param[in] graph                The input graph to decompose.
              *  @param[in] preprocessedGraph    The input graph in preprocessed format.
              *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-             *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
              *
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
-            HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
+            HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize) const;
 
             /**
              *  Compute a decomposition of the given graph and apply the given manipulation operations to it. The manipulation operations are applied in the given order.
@@ -146,7 +144,6 @@ namespace htd
              *  @param[in] preprocessedGraph        The input graph in preprocessed format.
              *  @param[in] manipulationOperations   The manipulation operations which shall be applied.
              *  @param[in] maxBagSize               The upper bound for the maximum bag size of the decomposition.
-             *  @param[in] maxIterationCount        The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
              *
              *  @note The manipulation operations provided to this function are applied right after the manipulation operations defined globally for the algorithm.
              *
@@ -157,9 +154,9 @@ namespace htd
              *  @note The bag size which is compared to maxBagSize is the maximum bag size of the decomposition BEFORE the manipulation operations are applied.
              *  Therefore, the result of this function may have a maximum bag size exceeding maxBagSize if the requested manipulations create larger bags.
              *
-             *  @return A pair consisting of the new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+             *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
-            HTD_API std::pair<htd::ITreeDecomposition *, std::size_t> computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const;
+            HTD_API htd::ITreeDecomposition *computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const;
 
             HTD_API void setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) HTD_OVERRIDE;
 
@@ -177,7 +174,15 @@ namespace htd
 
             HTD_API void setManagementInstance(const htd::LibraryInstance * const manager) HTD_OVERRIDE;
 
-            HTD_API ExternalTreeDecompositionAlgorithm * clone(void) const HTD_OVERRIDE;
+            HTD_API ExternalPipeTreeDecompositionAlgorithm * clone(void) const HTD_OVERRIDE;
+
+            HTD_API void setCommand(const std::string & cmd) HTD_OVERRIDE;
+
+            HTD_API std::string getCommand() HTD_OVERRIDE;
+
+            HTD_API void setTimeout(const unsigned int & timeout) HTD_OVERRIDE;
+
+            HTD_API unsigned int getTimeout() HTD_OVERRIDE;
 
         protected:
             /**
@@ -185,7 +190,7 @@ namespace htd
              *
              *  @note This operator is protected to prevent assignments to an already initialized algorithm.
              */
-            ExternalTreeDecompositionAlgorithm & operator=(const ExternalTreeDecompositionAlgorithm &)
+            ExternalPipeTreeDecompositionAlgorithm & operator=(const ExternalPipeTreeDecompositionAlgorithm &)
             { return *this; }
 
         private:
@@ -194,4 +199,4 @@ namespace htd
             std::unique_ptr<Implementation> implementation_;
     };
 }
-#endif //HTD_EXTERNALTREEDECOMPOSITIONALGORITHM_HPP
+#endif //HTD_EXTERNALPIPETREEDECOMPOSITIONALGORITHM_HPP

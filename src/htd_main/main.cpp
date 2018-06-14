@@ -758,7 +758,7 @@ int main(int argc, const char * const * const argv)
                 }
                 else if (externalOption.used())
                 {
-                    decompAlgorithm = (new htd::ExternalTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                    decompAlgorithm = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                 }
                 else if (pathOption.used())
                 {
