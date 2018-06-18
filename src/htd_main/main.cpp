@@ -56,6 +56,7 @@ htd_cli::OptionManager * createOptionManager(void)
 
         decompositionTypeChoice->addPossibility("tree", "Compute a tree decomposition of the input graph.");
         decompositionTypeChoice->addPossibility("hypertree", "Compute a hypertree decomposition of the input graph.");
+		decompositionTypeChoice->addPossibility("separator-highest-degree", "Compute a (optimal) separator of the input graph using a 'highest-degree' algorithm");
 
         decompositionTypeChoice->setDefaultValue("tree");
 
@@ -421,7 +422,7 @@ template <typename DecompositionAlgorithm, typename GraphType, typename Exporter
 void decompose(const htd::LibraryInstance & instance, const DecompositionAlgorithm & algorithm, GraphType * graph, const Exporter & exporter)
 {
     if (graph != nullptr && !instance.isTerminated())
-    {
+    {	
         auto * decomposition = algorithm.computeDecomposition(*graph);
 
         if (decomposition != nullptr)
@@ -623,6 +624,44 @@ int main(int argc, const char * const * const argv)
         const std::string & outputFormat = outputFormatChoice.value();
 
         bool hypertreeDecompositionRequested = decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) == "hypertree";
+
+		if (std::string(decompositionTypeChoice.value()) == "separator-highest-degree") 
+		{
+			htd::HighestDegreeSeparatorAlgorithm * separatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
+
+			htd_io::GrFormatImporter importer(libraryInstance);
+		
+			std::vector<htd::vertex_t> * separator;
+
+			if (instanceOption.used())
+			{
+				separator = separatorAlgorithm->computeSeparator(*importer.import(instanceOption.value())->cloneMultiGraph());
+			}
+			else
+			{
+				separator = separatorAlgorithm->computeSeparator(*importer.import(std::cin));
+			}
+
+			if (separator != nullptr)
+			{
+				std::vector<htd::vertex_t>::iterator it;
+
+				std::cout << "The size of the separator is: " << separator->size() << std::endl;
+
+				std::cout << "The separator contains the following vertices: ";
+
+				for (it = separator->begin(); it != separator->end(); it++)
+				{
+					std::cout << *it << " ";
+				}
+			}
+
+			delete separator;
+
+			delete separatorAlgorithm;
+
+			return 0;
+		}
 
         if (std::string(strategyChoice.value()) == "min-separator")
         {
