@@ -60,9 +60,9 @@ namespace htd
 		HTD_API TreeDecompositionViaSeparatorAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations);
 
 		/**
-		*  Copy constructor for a htd::SeparatorBasedTreeDecompositionAlgorithm object.
+		*  Copy constructor for a htd::TreeDecompositionViaSeparatorAlgorithm object.
 		*
-		*  @param[in] original The original htd::SeparatorBasedTreeDecompositionAlgorithm object.
+		*  @param[in] original The original htd::TreeDecompositionViaSeparatorAlgorithm object.
 		*/
 		HTD_API TreeDecompositionViaSeparatorAlgorithm(const htd::TreeDecompositionViaSeparatorAlgorithm & original);
 
@@ -118,6 +118,8 @@ namespace htd
 		*  algorithm. Deleting the graph separator algorithm provided to this method outside the decomposition algorithm or assigning the same
 		*  graph separator algorithm multiple times will lead to undefined behavior.
 		*/
+
+		HTD_API void setGraphSeparatorAlgorithm(htd::IGraphSeparatorAlgorithm * algorithm);
 		
 		HTD_API void setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) HTD_OVERRIDE;
 
@@ -126,6 +128,10 @@ namespace htd
 		HTD_API void addManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) HTD_OVERRIDE;
 
 		HTD_API bool isSafelyInterruptible(void) const HTD_OVERRIDE;
+
+		HTD_API bool isComputeInducedEdgesEnabled(void) const HTD_OVERRIDE;
+
+		HTD_API void setComputeInducedEdgesEnabled(bool computeInducedEdgesEnabled) HTD_OVERRIDE;
 	
 		HTD_API const htd::LibraryInstance * managementInstance(void) const HTD_NOEXCEPT HTD_OVERRIDE;
 

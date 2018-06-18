@@ -236,6 +236,7 @@
 #include <htd/TreeDecomposition.hpp>
 #include <htd/TreeDecompositionOptimizationOperation.hpp>
 #include <htd/TreeDecompositionVerifier.hpp>
+#include <htd/TreeDecompositionViaSeparatorAlgorithm.hpp>
 #include <htd/Tree.hpp>
 #include <htd/TriangulationMinimizationOrderingAlgorithm.hpp>
 #include <htd/TrivialTreeDecompositionAlgorithm.hpp>
