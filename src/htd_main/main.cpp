@@ -283,6 +283,22 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
                 ret = false;
             }
         }
+		else if (value == "new-min-separator")
+		{
+			if (optimizationChoice.used() && std::string(optimizationChoice.value()) == "width")
+			{
+				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"new-min-separator\" may only be used when option --opt is set to \"none\"!" << std::endl;
+
+				ret = false;
+			}
+
+			if (ret && triangulationMinimizationOption.used())
+			{
+				std::cerr << "INVALID USE OF PROGRAM OPTION: Triangulation minimization may only be applied when using a decomposition strategy based on vertex elimination orderings!" << std::endl;
+
+				ret = false;
+			}
+		}
         else if (value == "max-cardinality")
         {
             manager->orderingAlgorithmFactory().setConstructionTemplate(new htd::MaximumCardinalitySearchOrderingAlgorithm(manager));
@@ -633,7 +649,15 @@ int main(int argc, const char * const * const argv)
 
             libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
         }
-        else
+        else if (std::string(strategyChoice.value()) == "new-min-separator") //
+		{
+			htd::TreeDecompositionViaSeparatorAlgorithm * treeDecompositionAlgorithm = new htd::TreeDecompositionViaSeparatorAlgorithm(libraryInstance);
+
+			treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
+
+			libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
+		}
+		else
         {
             htd::BucketEliminationTreeDecompositionAlgorithm * treeDecompositionAlgorithm = new htd::BucketEliminationTreeDecompositionAlgorithm(libraryInstance);
 

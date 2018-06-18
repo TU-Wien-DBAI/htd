@@ -39,8 +39,9 @@
 #include <htd/IGraphPreprocessor.hpp>
 #include <htd/GraphSeparatorAlgorithmFactory.hpp>
 #include <htd/ITreeDecompositionManipulationOperation.hpp>
-#include <htd/TrivialTreeDecompositionAlgorithm.hpp>
+#include <htd/MinimumSeparatorAlgorithm.hpp>
 #include <htd/WidthReductionOperation.hpp>
+#include <htd/TrivialTreeDecompositionAlgorithm.hpp>
 
 #include <algorithm>
 #include <cstdarg>
@@ -48,6 +49,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <math.h> 
 
 /**
 *  Private implementation details of class htd::TreeDecompositionViaSeparatorAlgorithm.
@@ -59,7 +61,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*
 	*  @param[in] manager  The management instance to which the current object instance belongs.
 	*/
-	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_()
+	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), separatorAlgorithm_(manager->graphSeparatorAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_()
 	{
 
 	}
@@ -69,7 +71,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*
 	*  @param[in] original The original implementation details structure.
 	*/
-	Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_()
+	Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), separatorAlgorithm_(original.separatorAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_()
 	{
 		for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
 		{
@@ -92,6 +94,8 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 
 	virtual ~Implementation()
 	{		
+		delete separatorAlgorithm_;
+
 		for (auto & labelingFunction : labelingFunctions_)
 		{
 			delete labelingFunction;
@@ -109,9 +113,34 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	const htd::LibraryInstance * managementInstance_;
 
 	/**
+	*  The underlying graph separator algorithm.
+	*/
+	htd::IGraphSeparatorAlgorithm * separatorAlgorithm_;
+
+	/**
 	*  The labeling functions which are applied after the decomposition was computed.
 	*/
 	std::vector<htd::ILabelingFunction *> labelingFunctions_;
+
+	/**
+	*  A boolean flag indicating whether the hyperedges induced by a respective bag shall be computed.
+	*/
+	bool computeInducedEdges_;
+
+	/**
+	*  Compute a new mutable tree decompostion of the given graph.
+	*
+	*  @param[in] graph                The graph which shall be decomposed.
+	*  @param[in] preprocessedGraph    The input graph in preprocessed format.
+	*
+	*  @return A mutable tree decompostion of the given graph.
+	*/
+	void computeMutableDecomposition( htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, const int counter, const int max) const;
+
+
+	void computeMutableDecompositionBagSize(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, const int limit) const;
+
+	void computeMutableDecompositionSeparators(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, std::vector<vertex_t> oldSeparator) const;
 
 	/**
 	*  The manipuation operations which are applied after the decomposition was computed.
@@ -166,48 +195,17 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 
 htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 { 
+	
 	//DECLARATION
-	htd::IMutableTreeDecomposition * ret;
-	htd::IGraphSeparatorAlgorithm * separatorAlgorithm;
-	htd::IConnectedComponentAlgorithm * conAlg;
-	MultiHypergraph * graphWithoutSeparator ;	
-	htd::MultiHypergraph referrenceGraph(graph);	
+	htd::IMutableTreeDecomposition * ret = dynamic_cast<htd::IMutableTreeDecomposition *>(implementation_ ->managementInstance_ ->treeDecompositionFactory().createInstance());
 	
-	std::vector<std::vector<htd::vertex_t>> components;
-	std::vector<std::vector<htd::vertex_t>> neighbors;
-
-	//******* SEPARATOR and COMPONENTS *******//
-	
-	std::vector<vertex_t> * separator = separatorAlgorithm->computeSeparator(graph);	
-	
-	graphWithoutSeparator->assign(* graph.cloneMultiHypergraph());
-	for (int i = 0; i < separator->size(); i++)
-	{		
-		graphWithoutSeparator->removeVertex(separator->at(i));
-	}	
-
-	conAlg->determineComponents(graph, components);
-
-	//neighbors
-	int counter = 0;
-	for (htd::vertex_t v : *separator)
-	{		
-		for (std::vector<htd::vertex_t> comp : components)
-		{
-			for (htd::vertex_t n : graph.neighbors(v))
-			{
-				if (std::find(comp.begin(), comp.end(), n) != comp.end())
-					comp.push_back(n);
-			}			
-		}
-	}
-	
-	//******* TREE DECOMPOSITION *********//
-	htd::vertex_t root = ret->insertRoot(* separator, graph.hyperedgesAtPositions(* separator));
-	ret->addChild(root /* , vector<vertices>  */); 
+	int numberOfSteps = ceil(log(graph.vertexCount()));
+	int countSteps = 0;
 	
 	
 
+	//implementation_  -> computeMutableDecompositionBagSize(ret, graph, preprocessedGraph, NULL, 7);
+	implementation_->computeMutableDecomposition(ret, graph, preprocessedGraph, NULL, countSteps, numberOfSteps);
 	
 	return ret;
 }
@@ -246,6 +244,15 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 	va_end(arguments);
 
 	return computeDecomposition(graph, preprocessedGraph, manipulationOperations);
+}
+
+void htd::TreeDecompositionViaSeparatorAlgorithm::setGraphSeparatorAlgorithm(htd::IGraphSeparatorAlgorithm * algorithm)
+{
+	HTD_ASSERT(algorithm != nullptr)
+
+		delete implementation_->separatorAlgorithm_;
+
+	implementation_->separatorAlgorithm_ = algorithm;
 }
 
 void htd::TreeDecompositionViaSeparatorAlgorithm::setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations)
@@ -320,6 +327,238 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::setManagementInstance(const ht
 		implementation_->managementInstance_ = manager;
 }
 
+void htd::TreeDecompositionViaSeparatorAlgorithm::setComputeInducedEdgesEnabled(bool computeInducedEdgesEnabled)
+{
+	implementation_->computeInducedEdges_ = computeInducedEdgesEnabled;
+}
 
+bool htd::TreeDecompositionViaSeparatorAlgorithm::isComputeInducedEdgesEnabled(void) const
+{
+	return implementation_->computeInducedEdges_;
+}
+
+htd::TreeDecompositionViaSeparatorAlgorithm * htd::TreeDecompositionViaSeparatorAlgorithm::clone(void) const
+{
+	return new TreeDecompositionViaSeparatorAlgorithm(*this); // new htd::TreeDecompositionViaSeparatorAlgorithm(/*this*/);
+}
+
+void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutableDecomposition(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, const int counter, const int max) const
+{	
+	MultiHypergraph  graphWithoutSeparator = MultiHypergraph(managementInstance_);
+	std::vector<std::vector<htd::vertex_t>> components = std::vector<std::vector<htd::vertex_t>>();
+	components.reserve(graph.vertexCount());  //TODO reserve - the correct number of places
+	std::vector<std::vector<htd::vertex_t>> neighbors = std::vector<std::vector<htd::vertex_t>>();
+	neighbors.reserve(graph.vertexCount());
+	std::vector<htd::vertex_t> neighborsOneComponent = std::vector<htd::vertex_t>();
+	neighborsOneComponent.reserve(graph.vertexCount());
+	std::vector<htd::FilteredHyperedgeCollection> neighborsEdges = std::vector<htd::FilteredHyperedgeCollection>();
+	neighborsEdges.reserve(graph.vertexCount());//TODO : initialize neighborsEdges
+
+	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(graph);  //separatorAlgorithm_->computeSeparator(graph);		
+
+	if (index != NULL)
+	{
+		htd::vertex_t sep = ret->addChild(index, separator, graph.hyperedgesAtPositions(separator));
+		index = sep;
+	}
+	else
+	{
+		htd::vertex_t root = ret->insertRoot(separator, graph.hyperedgesAtPositions(separator));
+		index = root;
+	}
+
+
+	graphWithoutSeparator.assign(*graph.cloneMultiHypergraph());
+	for (int i = 0; i < separator.size(); i++)
+	{
+		graphWithoutSeparator.removeVertex(separator.at(i));
+	}
+	managementInstance_->connectedComponentAlgorithmFactory().createInstance()->determineComponents(graphWithoutSeparator, components);
+
+	for (std::vector<htd::vertex_t> comp : components)
+	{
+		neighborsOneComponent.clear();
+		for (htd::vertex_t v : separator)
+		{			
+			for (htd::vertex_t n : graph.neighbors(v))
+			{
+				if (std::find(comp.begin(), comp.end(), n) != comp.end())
+				{
+					if (!(std::find(neighborsOneComponent.begin(), neighborsOneComponent.end(), n) != neighborsOneComponent.end()))
+					{
+						neighborsOneComponent.push_back(n);
+					}					
+					if (!(std::find(neighborsOneComponent.begin(), neighborsOneComponent.end(), v) != neighborsOneComponent.end()))
+					{
+						neighborsOneComponent.push_back(v);
+					}				
+				}
+			}			
+		}
+		neighbors.push_back(neighborsOneComponent);
+	}
+
+	//******* TREE DECOMPOSITION *********//
+	
+	for (unsigned int i = 0; i < neighbors.size(); i++)
+	{
+		htd::vertex_t w = ret->addChild(index, neighbors.at(i), graph.hyperedgesAtPositions(neighbors.at(i)));
+		if (counter + 1 <= max && (components.at(i).size()> neighbors.at(i).size() || (components.at(i).size() == neighbors.at(i).size() && components.at(i) != neighbors.at(i)) ) )  // TODO treba ustvari provjeriti da li su razliciti ili ne?
+		{
+			MultiHypergraph g = *graph.cloneMultiHypergraph();
+			for (vertex_t v : graph.vertices())
+			{
+				if (!(std::find(components.at(i).begin(), components.at(i).end(), v) != components.at(i).end()))
+					g.removeVertex(v);
+			}
+		
+			computeMutableDecomposition(ret, g, preprocessedGraph, w, counter + 1, max);
+			//if (components.at(i) != neighbors.at(i) && components.at(i).size() >= neighbors.at(i).size())  //TODO sortirati vektore
+			//	ret->addChild(w, components.at(i), graph.hyperedgesAtPositions(components.at(i)));
+		}
+		else
+		{
+			if (components.at(i) != neighbors.at(i) && components.at(i).size() >= neighbors.at(i).size())  //TODO sortirati vektore
+				ret->addChild(w, components.at(i), graph.hyperedgesAtPositions(components.at(i)));
+		}
+		//if (components.at(i) != neighbors.at(i) && components.at(i).size() >= neighbors.at(i).size())  //TODO sortirati vektore
+		//		ret->addChild(w, components.at(i), graph.hyperedgesAtPositions(components.at(i)));
+		
+	}
+}
+
+void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutableDecompositionBagSize(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, const int limit) const
+{
+	MultiHypergraph  graphWithoutSeparator = MultiHypergraph(managementInstance_);
+	std::vector<std::vector<htd::vertex_t>> components = std::vector<std::vector<htd::vertex_t>>();
+	components.reserve(graph.vertexCount());  //TODO reserve - the correct number of places
+	std::vector<std::vector<htd::vertex_t>> neighbors = std::vector<std::vector<htd::vertex_t>>();
+	neighbors.reserve(graph.vertexCount());
+	std::vector<htd::vertex_t> neighborsOneComponent = std::vector<htd::vertex_t>();
+	neighborsOneComponent.reserve(graph.vertexCount());
+	std::vector<htd::FilteredHyperedgeCollection> neighborsEdges = std::vector<htd::FilteredHyperedgeCollection>();
+	neighborsEdges.reserve(graph.vertexCount());//TODO : initialize neighborsEdges
+
+	std::vector<vertex_t>  separator = *separatorAlgorithm_->computeSeparator(graph);  //separatorAlgorithm_->computeSeparator(graph);		
+
+	if (index != NULL)
+	{
+		htd::vertex_t sep = ret->addChild(index, separator, graph.hyperedgesAtPositions(separator));
+		index = sep;
+	}
+	else
+	{
+		htd::vertex_t root = ret->insertRoot(separator, graph.hyperedgesAtPositions(separator));
+		index = root;
+	}
+
+	graphWithoutSeparator.assign(*graph.cloneMultiHypergraph());
+	for (int i = 0; i < separator.size(); i++)
+	{
+		graphWithoutSeparator.removeVertex(separator.at(i));
+	}
+	managementInstance_->connectedComponentAlgorithmFactory().createInstance()->determineComponents(graphWithoutSeparator, components);  //determineComponents(graphWithoutSeparator, components); 
+
+	for (std::vector<htd::vertex_t> comp : components)
+	{
+		neighborsOneComponent.clear();
+		for (htd::vertex_t v : separator)
+		{
+			for (htd::vertex_t n : graph.neighbors(v))
+			{
+				if (std::find(comp.begin(), comp.end(), n) != comp.end())
+				{
+					if (!(std::find(neighborsOneComponent.begin(), neighborsOneComponent.end(), n) != neighborsOneComponent.end()))
+					{
+						neighborsOneComponent.push_back(n);
+					}
+					if (!(std::find(neighborsOneComponent.begin(), neighborsOneComponent.end(), v) != neighborsOneComponent.end()))
+					{
+						neighborsOneComponent.push_back(v);
+					}
+				}
+			}
+		}
+		neighbors.push_back(neighborsOneComponent);
+	}
+
+	//******* TREE DECOMPOSITION *********//
+
+	for (unsigned int i = 0; i < neighbors.size(); i++)
+	{
+		htd::vertex_t w = ret->addChild(index, neighbors.at(i), graph.hyperedgesAtPositions(neighbors.at(i)));
+		if (components.at(i).size()> limit && components.at(i).size()> neighbors.at(i).size())
+		{
+			MultiHypergraph g = *graph.cloneMultiHypergraph();
+			for (vertex_t v : graph.vertices())
+			{
+				if (!(std::find(components.at(i).begin(), components.at(i).end(), v) != components.at(i).end()))
+					g.removeVertex(v);
+			}
+			computeMutableDecompositionBagSize(ret, g, preprocessedGraph, w, limit);
+
+		}
+		else
+		{
+			if (neighbors.at(i).size() <= components.at(i).size())
+				ret->addChild(w, components.at(i), graph.hyperedgesAtPositions(components.at(i)));
+		}
+
+	}
+}
+
+void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutableDecompositionSeparators(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, std::vector<vertex_t> oldSeparator) const
+{
+	MultiHypergraph  graphWithoutSeparator = MultiHypergraph(managementInstance_);
+	std::vector<std::vector<htd::vertex_t>> components = std::vector<std::vector<htd::vertex_t>>();
+	components.reserve(graph.vertexCount());  //TODO reserve - the correct number of places
+	
+	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(graph);  //separatorAlgorithm_->computeSeparator(graph);		
+	std::vector<vertex_t> separators = separator;
+
+	if (index != NULL)
+	{
+		htd::vertex_t sep = ret->addChild(index, separator, graph.hyperedgesAtPositions(separator));
+		index = sep;
+	}
+	else
+	{
+		for (vertex_t v : oldSeparator)
+		{
+			if (!(std::find(separator.begin(), separator.end(), v) != separator.end()))
+				separators.push_back(v);
+		}
+		htd::vertex_t root = ret->insertRoot(separators, graph.hyperedgesAtPositions(separators));
+		index = root;
+	}
+
+	if (separator.size() > 1) 
+	{
+		graphWithoutSeparator.assign(*graph.cloneMultiHypergraph());
+		for (int i = 0; i < separator.size(); i++)
+		{
+			graphWithoutSeparator.removeVertex(separator.at(i));
+		}
+		managementInstance_->connectedComponentAlgorithmFactory().createInstance()->determineComponents(graphWithoutSeparator, components);
+
+		for (std::vector<htd::vertex_t> comp : components)
+		{
+			MultiHypergraph g = *graph.cloneMultiHypergraph();
+			for (vertex_t v : graph.vertices())
+			{
+				if (!(std::find(comp.begin(), comp.end(), v) != comp.end()))
+					g.removeVertex(v);
+			}
+
+			computeMutableDecompositionSeparators(ret, g, preprocessedGraph, index, separator);
+		}
+
+	}
+	else
+	{
+		MultiHypergraph g = *graph.cloneMultiHypergraph();
+		ret->addChild(index, g.vertexVector() , g.hyperedgesAtPositions(g.vertexVector()));
+	}	
+}
 
 #endif /* HTD_HTD_SEPARATORBASEDTREEDECOMPOSITIONALGORITHM_CPP */
