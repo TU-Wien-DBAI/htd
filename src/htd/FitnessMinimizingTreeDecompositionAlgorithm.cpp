@@ -35,9 +35,11 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
     /**
      *  Constructor for the implementation details structure.
      *
-     *  @param[in] manager          The management instance to which the current object instance belongs.
-     *  @param[in] decompostion     String containing the tree decomposition or the path to the file containing the tree decomposition.
-     */
+     *  @param[in] manager                      The management instance to which the current object instance belongs.
+      * @param[in] fitnessFunction              The fitness function to minimize.
+      * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
+      * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
+      */
     Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), deterministicAlgorithms_(deterministicAlgorithms), nonDeterministicAlgorithms_(nonDeterministicAlgorithms), fitnessFunction_(fitnessFunction)
     {
     }
@@ -123,13 +125,11 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
      *  @param[in] graph                The graph which shall be decomposed.
      *  @param[in] preprocessedGraph    The input graph in preprocessed format.
      *  @param[in] maxBagSize           The upper bound for the maximum bag size of the decomposition.
-     *  @param[in] maxIterationCount    The maximum number of iterations resulting in a higher maximum bag size than maxBagSize after which a null-pointer is returned.
+     *  @param[in] maxIterationCount    The maximum number of iterations
      *
-     *  @return A pair consisting of a mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
+     *  @return A mutable tree decompostion of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
      */
-    std::pair<htd::IMutableTreeDecomposition *, std::size_t> computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
-
-    std::string convert(const IMultiHypergraph & graph) const;
+    htd::IMutableTreeDecomposition * computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 };
 
 htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms) : implementation_(new Implementation(manager, fitnessFunction, deterministicAlgorithms, nonDeterministicAlgorithms))
@@ -159,22 +159,21 @@ htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::comp
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1).first;
+    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     return computeDecomposition(graph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     htd::IGraphPreprocessor * preprocessor = implementation_->managementInstance_->graphPreprocessorFactory().createInstance();
 
     htd::IPreprocessedGraph * preprocessedGraph = preprocessor->prepare(graph);
 
-    std::pair<htd::ITreeDecomposition *, std::size_t> ret =
-        computeDecomposition(graph, *preprocessedGraph, manipulationOperations, maxBagSize, maxIterationCount);
+    htd::ITreeDecomposition * ret = computeDecomposition(graph, *preprocessedGraph, manipulationOperations, maxBagSize, maxIterationCount);
 
     delete preprocessedGraph;
     delete preprocessor;
@@ -189,19 +188,17 @@ htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::comp
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1).first;
+    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     return computeDecomposition(graph, preprocessedGraph, std::vector<htd::IDecompositionManipulationOperation *>(), maxBagSize, maxIterationCount);
 }
 
-std::pair<htd::ITreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
-    std::pair<htd::IMutableTreeDecomposition *, std::size_t> ret = implementation_->computeMutableDecomposition(graph, preprocessedGraph, maxBagSize, maxIterationCount);
-
-    htd::IMutableTreeDecomposition * decomposition = ret.first;
+    htd::IMutableTreeDecomposition * decomposition = implementation_->computeMutableDecomposition(graph, preprocessedGraph, maxBagSize, maxIterationCount);
 
     if (decomposition != nullptr)
     {
@@ -270,7 +267,7 @@ std::pair<htd::ITreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDeco
         delete operation;
     }
 
-    return ret;
+    return decomposition;
 }
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, int manipulationOperationCount, ...) const
@@ -396,9 +393,10 @@ htd::FitnessMinimizingTreeDecompositionAlgorithm * htd::FitnessMinimizingTreeDec
     return new htd::FitnessMinimizingTreeDecompositionAlgorithm(*this);
 }
 
-std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t maxIterationCount) const
+htd::IMutableTreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     ITreeDecomposition * decomp = nullptr;
+    FitnessEvaluation * bestEvaluation = nullptr;
 
     for (const ITreeDecompositionAlgorithm * deterministicAlgorithm : deterministicAlgorithms_)
     {
@@ -408,40 +406,65 @@ std::pair<htd::IMutableTreeDecomposition *, std::size_t> htd::FitnessMinimizingT
         }
         ITreeDecomposition * tmpDecomp = deterministicAlgorithm->computeDecomposition(graph);
 
-        if (decomp == 0 || fitnessFunction_->fitness(graph, *tmpDecomp) < fitnessFunction_->fitness(graph, *decomp))
+        if (tmpDecomp != nullptr)
         {
-            delete decomp;
+            FitnessEvaluation * currentEvaluation = fitnessFunction_->fitness(graph, *tmpDecomp);
+            if ((tmpDecomp->maximumBagSize() < maxBagSize) && (decomp == nullptr || *currentEvaluation > *bestEvaluation))
+            {
+                delete decomp;
 
-            decomp = tmpDecomp;
+                delete bestEvaluation;
+
+                decomp = tmpDecomp;
+
+                bestEvaluation = currentEvaluation;
+            }
+            else
+            {
+                delete tmpDecomp;
+
+                delete currentEvaluation;
+            }
         }
     }
 
-    for (std::size_t i = 0; i < maxIterationCount; i++)
+    for (std::size_t i = 0; i < maxIterationCount && !(managementInstance_->isTerminated()); i++)
     {
-        if (managementInstance_->isTerminated())
-        {
-            break;
-        }
         for (const ITreeDecompositionAlgorithm * nonDeterministicAlgorithm : nonDeterministicAlgorithms_)
         {
             if (managementInstance_->isTerminated())
             {
                 break;
             }
+
             ITreeDecomposition * tmpDecomp = nonDeterministicAlgorithm->computeDecomposition(graph);
 
-            if (decomp == 0 || fitnessFunction_->fitness(graph, *tmpDecomp) < fitnessFunction_->fitness(graph, *decomp))
+            if (tmpDecomp != nullptr)
             {
-                delete decomp;
+                FitnessEvaluation * currentEvaluation = fitnessFunction_->fitness(graph, *tmpDecomp);
+                if ((tmpDecomp->maximumBagSize() < maxBagSize) && (decomp == nullptr || *currentEvaluation > *bestEvaluation))
+                {
+                    delete decomp;
 
-                decomp = tmpDecomp;
+                    delete bestEvaluation;
+
+                    decomp = tmpDecomp;
+
+                    bestEvaluation = currentEvaluation;
+                }
+                else
+                {
+                    delete tmpDecomp;
+
+                    delete currentEvaluation;
+                }
             }
         }
     }
 
     htd::IMutableTreeDecomposition & mutableTreeDecomposition = managementInstance_->treeDecompositionFactory().accessMutableInstance(*decomp);
 
-    return std::pair<htd::IMutableTreeDecomposition *, std::size_t>(&mutableTreeDecomposition, 0);
+    return &mutableTreeDecomposition;
 }
 
 
