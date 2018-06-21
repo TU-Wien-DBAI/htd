@@ -49,7 +49,7 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     *
     *  @param[in] original The original implementation details structure.
     */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_), dir_(original.dir_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -124,6 +124,11 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     bool computeInducedEdges_;
 
     /**
+    * The directory in which the solver gets executed
+    */
+    std::string dir_;
+
+    /**
     *  Compute a new mutable tree decompostion of the given graph.
     *
     *  @param[in] graph                The graph which shall be decomposed.
@@ -137,7 +142,27 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     void getDecomp() const;
 
     std::string convert(const IMultiHypergraph & graph) const;
+
+    void setDirectory(const std::string dir)
+    {
+        dir_ = dir;
+    }
+
+    std::string getDirectory()
+    {
+        return dir_;
+    }
 };
+
+void htd::ExternalTmpFileTreeDecompositionAlgorithm::setDirectory(const std::string dir)
+{
+    implementation_->setDirectory(dir);
+}
+
+std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::getDirectory()
+{
+    return implementation_->getDirectory();
+}
 
 htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
@@ -599,7 +624,7 @@ void htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::getDecomp()
 
     if (pid < 0)
     {
-        //TODO Error
+        return;
     }
 
     if (pid == 0)
@@ -608,16 +633,22 @@ void htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::getDecomp()
 
         if (pipe(inpipefd) < 0)
         {
-            //TODO Error
+            return;
         };
 
         dup2(inpipefd[1], STDIN_FILENO);
+
         dup2(inpipefd[1], STDERR_FILENO);
+
         dup2(inpipefd[1], STDOUT_FILENO);
 
         wordexp_t p;
+
         wordexp(cmd_.c_str(), &p, 0);
+
         char ** cmd = p.we_wordv;
+
+        chdir(dir_.c_str());
 
         execvp(cmd[0], cmd);
 
@@ -629,7 +660,7 @@ void htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::getDecomp()
         pid_ = fork();
         if (pid_ < 0)
         {
-            //TODO Error
+            return;
         }
 
         if (pid_ == 0)

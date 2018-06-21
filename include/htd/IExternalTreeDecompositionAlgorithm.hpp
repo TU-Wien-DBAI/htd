@@ -44,6 +44,20 @@ namespace htd
              */
             virtual unsigned int getTimeout() = 0;
 
+            /**
+             * Setter for the directory in which the solver gets executed.
+             *
+             * @param dir   The directory in which the solver gets executed.
+             */
+            virtual void setDirectory(const std::string dir) = 0;
+
+            /**
+             * Getter for the directory in which the solver gets executed.
+             *
+             * @return   The directory in which the solver gets executed.
+             */
+            virtual std::string getDirectory() = 0;
+
             virtual IExternalTreeDecompositionAlgorithm * clone() const HTD_OVERRIDE = 0;
     };
 }

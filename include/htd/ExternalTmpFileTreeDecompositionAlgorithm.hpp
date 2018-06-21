@@ -195,6 +195,10 @@ namespace htd
 
             HTD_API std::string getDecompositionFilePath();
 
+            HTD_API void setDirectory(const std::string dir) HTD_OVERRIDE;
+
+            HTD_API std::string getDirectory() HTD_OVERRIDE;
+
         protected:
             /**
              *  Copy assignment operator for a graph decomposition algorithm.

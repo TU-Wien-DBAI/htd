@@ -156,7 +156,7 @@ namespace htd
              *
              *  @return A new ITreeDecomposition object representing the decomposition of the given graph or a null-pointer in case that the decomposition does not have a appropriate maximum bag size or the decomposition is not a valid decomposition of the graph.
              */
-            HTD_API htd::ITreeDecomposition *computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const;
+            HTD_API htd::ITreeDecomposition * computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::size_t maxBagSize) const;
 
             HTD_API void setManipulationOperations(const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) HTD_OVERRIDE;
 
@@ -183,6 +183,10 @@ namespace htd
             HTD_API void setTimeout(const unsigned int & timeout) HTD_OVERRIDE;
 
             HTD_API unsigned int getTimeout() HTD_OVERRIDE;
+
+            HTD_API void setDirectory(const std::string dir) HTD_OVERRIDE;
+
+            HTD_API std::string getDirectory() HTD_OVERRIDE;
 
         protected:
             /**

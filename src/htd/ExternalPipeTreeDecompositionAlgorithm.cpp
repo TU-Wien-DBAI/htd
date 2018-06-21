@@ -48,7 +48,7 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     *
     *  @param[in] original The original implementation details structure.
     */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_), dir_(original.dir_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -113,6 +113,11 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     unsigned int timeout_;
 
     /**
+    * The directory in which the solver gets executed
+    */
+    std::string dir_;
+
+    /**
     *  Compute a new mutable tree decompostion of the given graph.
     *
     *  @param[in] graph                The graph which shall be decomposed.
@@ -126,7 +131,27 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     std::string convert(const IMultiHypergraph & graph) const;
 
     std::string getDecomp(const htd::IMultiHypergraph & graph) const;
+
+    void setDirectory(const std::string dir)
+    {
+        dir_ = dir;
+    }
+
+    std::string getDirectory()
+    {
+        return dir_;
+    }
 };
+
+void htd::ExternalPipeTreeDecompositionAlgorithm::setDirectory(const std::string dir)
+{
+    implementation_->setDirectory(dir);
+}
+
+std::string htd::ExternalPipeTreeDecompositionAlgorithm::getDirectory()
+{
+    return implementation_->getDirectory();
+}
 
 htd::ExternalPipeTreeDecompositionAlgorithm::ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout))
 {
@@ -590,33 +615,33 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDeco
 
     if (pipe(inpipefd) < 0)
     {
-        //TODO Error
+        return std::string("");
     };
 
     if (pipe(outpipefd) < 0)
     {
-        //TODO Error
+        return std::string("");
     };
 
     pid_t pid_solver = fork();
 
     if (pid_solver < 0)
     {
-        //TODO Error
+        return std::string("");
     }
 
     if (pid_solver == 0)
     {
         if (dup2(outpipefd[0], STDIN_FILENO) < 0)
         {
-            //TODO Error
+            return std::string("");
         };
 
         close(outpipefd[1]);
 
         if (dup2(inpipefd[1], STDOUT_FILENO) < 0)
         {
-            //TODO Error
+            return std::string("");
         };
 
         close(inpipefd[0]);
@@ -626,6 +651,8 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDeco
         wordexp(cmd_.c_str(), &p, 0);
 
         char ** cmd = p.we_wordv;
+
+        chdir(dir_.c_str());
 
         execvp(cmd[0], cmd);
 
@@ -641,7 +668,7 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDeco
 
     if (write(outpipefd[1], graphString.c_str(), graphLen) < (long)graphLen)
     {
-        //TODO Error
+        return std::string("");
     }
 
     close(outpipefd[1]);
