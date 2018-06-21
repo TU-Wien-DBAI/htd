@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <iostream>
 #include <htd/ExternalTmpFileTreeDecompositionAlgorithm.hpp>
+#include <htd/FitnessMinimizingTreeDecompositionAlgorithm.hpp>
 
 htd::LibraryInstance * const libraryInstance = htd::createManagementInstance(htd::Id::FIRST);
 
@@ -83,18 +84,6 @@ htd_cli::OptionManager * createOptionManager(void)
         htd_cli::SingleValueOption * commandOption = new htd_cli::SingleValueOption("command", "Execute an external decomposer with <command>.", "command");
 
         manager->registerOption(commandOption, "Input-Specific Options");
-
-        htd_cli::SingleValueOption * commandFileOption = new htd_cli::SingleValueOption("commandF", "Execute an external decomposer with <command>.", "commandF");
-
-        manager->registerOption(commandFileOption, "Input-Specific Options");
-
-        htd_cli::SingleValueOption * graphFileOption = new htd_cli::SingleValueOption("gPath", "tmp File for graph <path>.", "gPath");
-
-        manager->registerOption(graphFileOption, "Input-Specific Options");
-
-        htd_cli::SingleValueOption * decompFileOption = new htd_cli::SingleValueOption("dPath", "tmp file for decomp <path>.", "dPath");
-
-        manager->registerOption(decompFileOption, "Input-Specific Options");
 
         htd_cli::SingleValueOption * timeoutCOption = new htd_cli::SingleValueOption("timeoutC", "Set a timeout for an external decomposer int milliseconds with <timeoutC>.", "timeoutC");
 
@@ -155,6 +144,31 @@ htd_cli::OptionManager * createOptionManager(void)
         optimizationChoice->setDefaultValue("none");
 
         manager->registerOption(optimizationChoice, "Optimization Options");
+
+        htd_cli::Choice * solverChoice = new htd_cli::Choice("solver", "use an external <solver>", "solver");
+
+        solverChoice->addPossibility("all", "Use all available solver.");
+        solverChoice->addPossibility("htd", "This solver.");
+
+#ifdef MINFILL_MRS_PATH
+        solverChoice->addPossibility("minfill_mrs", "");
+#endif
+#ifdef BZTREEWIDTH_PATH
+        solverChoice->addPossibility("BZTreewidth", "");
+#endif
+#ifdef JDRASIL_PATH
+        solverChoice->addPossibility("Jdrasil", "");
+#endif
+#ifdef MFJONES_PATH
+        solverChoice->addPossibility("mfjones", "");
+#endif
+#ifdef MRPRAJESH_PATH
+        solverChoice->addPossibility("mrprajesh", "");
+#endif
+
+        solverChoice->setDefaultValue("htd");
+
+        manager->registerOption(solverChoice, "Solver Options");
 
         htd_cli::SingleValueOption * iterationOption = new htd_cli::SingleValueOption("iterations", "Set the number of iterations to be performed during optimization to <count> (0 = infinite). (Default: 10)", "count");
 
@@ -641,6 +655,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::Choice & optimizationChoice = optionManager->accessChoice("opt");
 
+        const htd_cli::Choice & solverChoice = optionManager->accessChoice("solver");
+
         const htd_cli::SingleValueOption & iterationOption = optionManager->accessSingleValueOption("iterations");
 
         const htd_cli::SingleValueOption & instanceOption = optionManager->accessSingleValueOption("instance");
@@ -650,12 +666,6 @@ int main(int argc, const char * const * const argv)
         const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("decomp");
 
         const htd_cli::SingleValueOption & externalOption = optionManager->accessSingleValueOption("command");
-
-        const htd_cli::SingleValueOption & externalFileOption = optionManager->accessSingleValueOption("commandF");
-
-        const htd_cli::SingleValueOption & graphFileOption = optionManager->accessSingleValueOption("gPath");
-
-        const htd_cli::SingleValueOption & decompFileOption = optionManager->accessSingleValueOption("dPath");
 
         const htd_cli::SingleValueOption & timeoutCOption = optionManager->accessSingleValueOption("timeoutC");
 
@@ -749,12 +759,98 @@ int main(int argc, const char * const * const argv)
             if (!error)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
-                if (externalFileOption.used())
+                if (solverChoice.used() && strcmp(solverChoice.value(), "htd") != 0)
                 {
-                    if(!graphFileOption.used()||!decompFileOption.used()){
-                        //TODO ERROR
+#ifdef MRPRAJESH_PATH
+                    if (!strcmp(solverChoice.value(), "mrprajesh"))
+                    {
+                        std::string path(MRPRAJESH_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
                     }
-                    decompAlgorithm = (new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0, graphFileOption.value(), decompFileOption.value()));
+#endif
+#ifdef BZTREEWIDTH_PATH
+                    if (!strcmp(solverChoice.value(), "BZTreewidth"))
+                    {
+                        std::string path(BZTREEWIDTH_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/bin/BZTreewidth-DFS.exe", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef JDRASIL_PATH
+                    if (!strcmp(solverChoice.value(), "Jdrasil"))
+                    {
+                        std::string path(JDRASIL_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef MFJONES_PATH
+                    if (!strcmp(solverChoice.value(), "mfjones"))
+                    {
+                        std::string path(MFJONES_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef MINFILL_MRS_PATH
+                    if (!strcmp(solverChoice.value(), "minfill_mrs"))
+                    {
+                        std::string path(MINFILL_MRS_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/minfill_mrs", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+                    if (!strcmp(solverChoice.value(), "all"))
+                    {
+                        class WidthFitnessFunction : public htd::ITreeDecompositionFitnessFunction
+                        {
+                            public:
+                                htd::FitnessEvaluation * fitness(const htd::IMultiHypergraph & graph, const htd::ITreeDecomposition & decomposition) const
+                                {
+                                    HTD_UNUSED(graph)
+
+                                    return new htd::FitnessEvaluation(2, -(double)(decomposition.maximumBagSize()), -(double)(decomposition.vertices().size()));
+                                }
+
+                                WidthFitnessFunction * clone(void) const
+                                {
+                                    return new WidthFitnessFunction();
+                                }
+                        };
+                        htd::FitnessMinimizingTreeDecompositionAlgorithm * algo = (new htd::FitnessMinimizingTreeDecompositionAlgorithm(libraryInstance, new WidthFitnessFunction()));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * externalAlgorithms;
+                        htd::WidthMinimizingTreeDecompositionAlgorithm * htdAlgorithm = new htd::WidthMinimizingTreeDecompositionAlgorithm(libraryInstance);
+                        htdAlgorithm->setIterationCount(10);
+                        algo->addNonDeterministicAlgorithm(htdAlgorithm);
+#ifdef MINFILL_MRS_PATH
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MINFILL_MRS_PATH) + "/minfill_mrs", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms->setDirectory(MINFILL_MRS_PATH);
+                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
+#endif
+#ifdef BZTREEWIDTH_PATH
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(BZTREEWIDTH_PATH) + "/bin/BZTreewidth-DFS.exe", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms->setDirectory(BZTREEWIDTH_PATH);
+                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
+#endif
+#ifdef JDRASIL_PATH
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(JDRASIL_PATH) + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms->setDirectory(JDRASIL_PATH);
+                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
+#endif
+#ifdef MFJONES_PATH
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MFJONES_PATH) + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms->setDirectory(MFJONES_PATH);
+                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
+#endif
+
+                        decompAlgorithm = algo;
+                    }
                 }
                 else if (externalOption.used())
                 {

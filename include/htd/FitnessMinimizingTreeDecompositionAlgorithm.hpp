@@ -22,6 +22,14 @@ namespace htd
              *
              *  @param[in] manager                      The management instance to which the new algorithm belongs.
               * @param[in] fitnessFunction              The fitness function to minimize.
+             */
+            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction);
+
+            /**
+             * Constructor for a tree decomposition algorithm which calls different algorithms to minimize a fitness function.
+             *
+             *  @param[in] manager                      The management instance to which the new algorithm belongs.
+              * @param[in] fitnessFunction              The fitness function to minimize.
               * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
               * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
              */
@@ -181,6 +189,10 @@ namespace htd
             HTD_API void setManagementInstance(const htd::LibraryInstance * const manager) HTD_OVERRIDE;
 
             HTD_API FitnessMinimizingTreeDecompositionAlgorithm * clone(void) const HTD_OVERRIDE;
+
+            HTD_API void addDeterministicAlgorithm(ITreeDecompositionAlgorithm *);
+
+            HTD_API void addNonDeterministicAlgorithm(ITreeDecompositionAlgorithm *);
 
         protected:
             /**

@@ -16,6 +16,7 @@ include(CPack)
 include(CTest)
 include(CheckIncludeFileCXX)
 include(WriteCompilerDetectionHeader)
+include(ExternalProject)
 
 find_package(Git)
 if(GIT_FOUND)
@@ -67,6 +68,73 @@ if(NOT DEFINED BUILD_TESTING)
 
     set(BUILD_TESTING OFF)
 endif()
+
+if (NOT DEFINED BUILD_EXTERNAL_SOLVERS)
+    ExternalProject_Add(mrprajesh
+            GIT_REPOSITORY https://github.com/mrprajesh/pacechallenge
+            GIT_TAG 6c29c143d72856f649de99846e91de185f78c15f
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/mrprajesh
+            )
+    get_filename_component(mrprajesh_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/mrprajesh" ABSOLUTE)
+    add_definitions(-DMRPRAJESH_PATH="${mrprajesh_path}")
+
+    ExternalProject_Add(BZTreewidth
+            GIT_REPOSITORY https://github.com/TomvdZanden/BZTreewidth
+            GIT_TAG bfbf736a98eea412c7ba2de4a21280816d9b8bbb
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/BZTreewidth
+            )
+    get_filename_component(BZTreewidth_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/BZTreewidth" ABSOLUTE)
+    add_definitions(-DBZTREEWIDTH_PATH="${BZTreewidth_path}")
+
+    ExternalProject_Add(Jdrasil
+            GIT_REPOSITORY https://github.com/maxbannach/Jdrasil
+            GIT_TAG fa7855e4c9f33163606a0677485a9e51d26d7b0a
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil
+            )
+    get_filename_component(Jdrasil_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil" ABSOLUTE)
+    add_definitions(-DJDRASIL_PATH="${Jdrasil_path}")
+
+    ExternalProject_Add(mfjones
+            GIT_REPOSITORY https://github.com/mfjones/pace2016
+            GIT_TAG 2b7f289e4d182799803a014d0ee1d76a4de70c1f
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones
+            )
+    get_filename_component(mfjones_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones" ABSOLUTE)
+    add_definitions(-DMFJONES_PATH="${mfjones_path}")
+
+    ExternalProject_Add(minfill_mrs
+            GIT_REPOSITORY https://github.com/td-mrs/minfill_mrs
+            GIT_TAG c1aa4f32ab3350d027ed0e932183f5f649b2ea88
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/minfill_mrs
+            )
+    get_filename_component(minfill_mrs_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/minfill_mrs" ABSOLUTE)
+    add_definitions(-DMINFILL_MRS_PATH="${minfill_mrs_path}")
+endif ()
 
 subdirs(src/htd)
 subdirs(src/htd_io)

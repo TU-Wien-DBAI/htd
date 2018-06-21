@@ -37,6 +37,16 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] manager                      The management instance to which the current object instance belongs.
       * @param[in] fitnessFunction              The fitness function to minimize.
+      */
+    Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), fitnessFunction_(fitnessFunction)
+    {
+    }
+
+    /**
+     *  Constructor for the implementation details structure.
+     *
+     *  @param[in] manager                      The management instance to which the current object instance belongs.
+      * @param[in] fitnessFunction              The fitness function to minimize.
       * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
       * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
       */
@@ -148,6 +158,11 @@ htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecomposi
 }
 
 htd::FitnessMinimizingTreeDecompositionAlgorithm::~FitnessMinimizingTreeDecompositionAlgorithm()
+{
+
+}
+
+htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, htd::ITreeDecompositionFitnessFunction * fitnessFunction) : implementation_(new Implementation(manager, fitnessFunction))
 {
 
 }
@@ -393,6 +408,16 @@ htd::FitnessMinimizingTreeDecompositionAlgorithm * htd::FitnessMinimizingTreeDec
     return new htd::FitnessMinimizingTreeDecompositionAlgorithm(*this);
 }
 
+void htd::FitnessMinimizingTreeDecompositionAlgorithm::addDeterministicAlgorithm(htd::ITreeDecompositionAlgorithm * algo)
+{
+    implementation_->deterministicAlgorithms_.push_back(algo);
+}
+
+void htd::FitnessMinimizingTreeDecompositionAlgorithm::addNonDeterministicAlgorithm(htd::ITreeDecompositionAlgorithm * algo)
+{
+    implementation_->nonDeterministicAlgorithms_.push_back(algo);
+}
+
 htd::IMutableTreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t maxIterationCount) const
 {
     ITreeDecomposition * decomp = nullptr;
@@ -462,9 +487,16 @@ htd::IMutableTreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorith
         }
     }
 
-    htd::IMutableTreeDecomposition & mutableTreeDecomposition = managementInstance_->treeDecompositionFactory().accessMutableInstance(*decomp);
+    if (decomp != nullptr)
+    {
+        htd::IMutableTreeDecomposition & mutableTreeDecomposition = managementInstance_->treeDecompositionFactory().accessMutableInstance(*decomp);
 
-    return &mutableTreeDecomposition;
+        return &mutableTreeDecomposition;
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 
