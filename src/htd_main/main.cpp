@@ -56,7 +56,7 @@ htd_cli::OptionManager * createOptionManager(void)
 
         decompositionTypeChoice->addPossibility("tree", "Compute a tree decomposition of the input graph.");
         decompositionTypeChoice->addPossibility("hypertree", "Compute a hypertree decomposition of the input graph.");
-		decompositionTypeChoice->addPossibility("separator-highest-degree", "Compute a (optimal) separator of the input graph using a 'highest-degree' algorithm");
+		decompositionTypeChoice->addPossibility("separator", "Compute a separator of the input graph.");
 
         decompositionTypeChoice->setDefaultValue("tree");
 
@@ -99,7 +99,8 @@ htd_cli::OptionManager * createOptionManager(void)
         strategyChoice->addPossibility("max-cardinality", "Maximum cardinality search ordering algorithm");
         strategyChoice->addPossibility("max-cardinality-enhanced", "Enhanced maximum cardinality search ordering algorithm (MCS-M)");
         strategyChoice->addPossibility("challenge", "Use a combination of different decomposition strategies.");
-
+		strategyChoice->addPossibility("highest-degree", "Highest degree separator algorithm");
+		strategyChoice->addPossibility("lgb", "Line Graph Bisection algorithm");
         strategyChoice->setDefaultValue("min-fill");
 
         manager->registerOption(strategyChoice, "Algorithm Options");
@@ -304,6 +305,15 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
         {
             manager->orderingAlgorithmFactory().setConstructionTemplate(new htd::RandomOrderingAlgorithm(manager));
         }
+		else if (value == "highest-degree" || value == "lgb")
+		{
+			if (decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) != "separator")
+			{
+				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"highest-degree\" and \"lgb\" may only be used when type is set to \"separator\"";
+
+				ret = false;
+			}
+		}
         else
         {
             std::cerr << "INVALID DECOMPOSITION STRATEGY: " << strategyChoice.value() << std::endl;
@@ -625,42 +635,61 @@ int main(int argc, const char * const * const argv)
 
         bool hypertreeDecompositionRequested = decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) == "hypertree";
 
-		if (std::string(decompositionTypeChoice.value()) == "separator-highest-degree") 
+		if (std::string(decompositionTypeChoice.value()) == "separator") 
 		{
-			htd::HighestDegreeSeparatorAlgorithm * separatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
-
-			htd_io::GrFormatImporter importer(libraryInstance);
-		
-			std::vector<htd::vertex_t> * separator;
-
-			if (instanceOption.used())
+			htd::IGraphSeparatorAlgorithm * separatorAlgorithm = nullptr;
+			
+			if (std::string(strategyChoice.value()) == "highest-degree") 
 			{
-				separator = separatorAlgorithm->computeSeparator(*importer.import(instanceOption.value())->cloneMultiGraph());
+				separatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
+			}
+			else if (std::string(strategyChoice.value()) == "lgb")
+			{
+				separatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
 			}
 			else
 			{
-				separator = separatorAlgorithm->computeSeparator(*importer.import(std::cin));
+				std::cerr << "INVALID STRATEGY FOR THE SEPARATOR ALGORITHM: " << strategyChoice.value() << std::endl;
+
+				error = true;
 			}
 
-			if (separator != nullptr)
+
+			if (!error) 
 			{
-				std::vector<htd::vertex_t>::iterator it;
+				htd_io::GrFormatImporter importer(libraryInstance);
 
-				std::cout << "The size of the separator is: " << separator->size() << std::endl;
-
-				std::cout << "The separator contains the following vertices: ";
-
-				for (it = separator->begin(); it != separator->end(); it++)
+				std::vector<htd::vertex_t> * separator = nullptr;
+		
+				if (instanceOption.used())
 				{
-					std::cout << *it << " ";
+					separator = separatorAlgorithm->computeSeparator(*importer.import(instanceOption.value())->cloneMultiGraph());
 				}
+				else
+				{
+					separator = separatorAlgorithm->computeSeparator(*importer.import(std::cin));
+				}
+
+				if (separator != nullptr && separator->size() > 0)
+				{
+					std::vector<htd::vertex_t>::iterator it;
+
+					std::cout << "The size of the separator is: " << separator->size() << std::endl;
+
+					std::cout << "The separator contains the following vertices: ";
+
+					for (it = separator->begin(); it != separator->end(); it++)
+					{
+						std::cout << *it << " ";
+					}
+				}
+
+				delete separator;
+
+				delete separatorAlgorithm;
 			}
 
-			delete separator;
-
-			delete separatorAlgorithm;
-
-			return 0;
+			std::exit(1);
 		}
 
         if (std::string(strategyChoice.value()) == "min-separator")

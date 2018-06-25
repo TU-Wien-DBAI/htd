@@ -188,6 +188,7 @@
 #include <htd/LabeledTree.hpp>
 #include <htd/Label.hpp>
 #include <htd/LabelingCollection.hpp>
+#include <htd/LgbSeparatorAlgorithm.hpp>
 #include <htd/LibraryInstance.hpp>
 #include <htd/LimitChildCountOperation.hpp>
 #include <htd/LimitMaximumForgottenVertexCountOperation.hpp>

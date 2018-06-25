@@ -9,9 +9,11 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <iostream>
+#include <chrono>
+#include <ctime>
 
 /**
-*  Private implementation details of class htd::MinimalSeparatorAlgorithm.
+*  Private implementation details of class htd::HighestDegreeAlgorithm.
 */
 struct htd::HighestDegreeSeparatorAlgorithm::Implementation
 {
@@ -63,7 +65,8 @@ std::vector<htd::vertex_t> getKeys(std::unordered_map<htd::vertex_t, bool> list)
 std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSeparator(const htd::IGraphStructure & graph) const
 {
 	htd::MultiGraph * newGraph = new htd::MultiGraph(managementInstance(), graph.vertexCount());
-
+	
+	const std::clock_t begin_time = std::clock();
 	for (auto v1 : graph.vertices()) 
 	{
 		for (auto v2 : graph.neighbors(v1))
@@ -74,12 +77,15 @@ std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSepara
 			}
 		}
 	}
+	std::cout << "Algorithm execution time: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " second(s)." << std::endl;
 
 	return computeSeparator(newGraph);
 }
 
 std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSeparator(htd::MultiGraph * graph) const
 {
+	const std::clock_t begin_time = std::clock();
+	
 	htd::DepthFirstConnectedComponentAlgorithm conectedComponentsAlgorithm(managementInstance());
 
 	std::vector<std::vector<htd::vertex_t>> target = std::vector<std::vector<htd::vertex_t>>();
@@ -91,6 +97,12 @@ std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSepara
 	conectedComponentsAlgorithm.determineComponents(*graph, target);
 
 	bool connected = target.size() < 2;
+
+	if (!connected) 
+	{
+		std::cout << "The input graph is not connected" << std::endl;
+		return separator;
+	}
 
 	target.clear();
 
@@ -150,6 +162,7 @@ std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSepara
 			keys = getKeys(list[current]);
 		}
 	}
+	std::cout << "Algorithm execution time: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " second(s)." << std::endl;
 
 	conectedComponentsAlgorithm.determineComponents(*graph, target);
 
