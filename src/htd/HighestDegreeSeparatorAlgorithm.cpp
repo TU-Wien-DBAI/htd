@@ -11,7 +11,7 @@
 #include <iostream>
 #include <chrono>
 #include <ctime>
-
+#include <random>
 /**
 *  Private implementation details of class htd::HighestDegreeAlgorithm.
 */
@@ -128,7 +128,11 @@ std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSepara
 
 		while (keys.size() > 0)
 		{
-			htd::vertex_t choice = keys.at(0);
+
+			std::random_device random_device;
+			std::mt19937 engine{ random_device() };
+			std::uniform_int_distribution<int> dist(0, keys.size() - 1);
+			htd::vertex_t choice = keys[dist(engine)];
 
 			separator->push_back(choice);
 
