@@ -139,6 +139,22 @@ namespace htd
 
 		HTD_API TreeDecompositionViaSeparatorAlgorithm * clone(void) const HTD_OVERRIDE;
 
+		HTD_API int getAlgorithmType(void) const;
+
+		HTD_API void setAlgorithmType(int algorithmType);
+
+		HTD_API int getCriteriaType(void) const;
+
+		HTD_API void setCriteriaType(int criteriaType);
+
+		HTD_API int getNumberOfSteps(void) const;
+
+		HTD_API void setNumberOfSteps(int numberOfSteps);
+
+		HTD_API int getSizeLimit(void) const;
+
+		HTD_API void setSizeLimit(int sizeLimit);
+
 	protected:
 		/**
 		*  Copy assignment operator for a tree decomposition algorithm based on graph separators.
