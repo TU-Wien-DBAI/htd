@@ -98,10 +98,11 @@ htd_cli::OptionManager * createOptionManager(void)
         strategyChoice->addPossibility("max-cardinality", "Maximum cardinality search ordering algorithm");
         strategyChoice->addPossibility("max-cardinality-enhanced", "Enhanced maximum cardinality search ordering algorithm (MCS-M)");
         strategyChoice->addPossibility("challenge", "Use a combination of different decomposition strategies.");
-		strategyChoice->addPossibility("new-min-separator", "Tree decomposition via minimal separator");
+		strategyChoice->addPossibility("new-min-separator-neighbor-based", "Tree decomposition via minimal separator (neighbors - based algorithm");
+		strategyChoice->addPossibility("new-min-separator-comp-separators-based", "Tree decomposition via minimal separator (component separator- based algorithm");
 
         strategyChoice->setDefaultValue("min-fill");
-
+		
         manager->registerOption(strategyChoice, "Algorithm Options");
 
         htd_cli::Choice * preprocessingChoice = new htd_cli::Choice("preprocessing", "Set the preprocessing strategy which shall be used to <strategy>.", "strategy");
@@ -283,11 +284,27 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
                 ret = false;
             }
         }
-		else if (value == "new-min-separator")
+		else if (value == "new-min-separator-neighbor-based")
 		{
 			if (optimizationChoice.used() && std::string(optimizationChoice.value()) == "width")
 			{
-				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"new-min-separator\" may only be used when option --opt is set to \"none\"!" << std::endl;
+				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"new-min-separator-neighbor-based\" may only be used when option --opt is set to \"none\"!" << std::endl;
+
+				ret = false;
+			}
+
+			if (ret && triangulationMinimizationOption.used())
+			{
+				std::cerr << "INVALID USE OF PROGRAM OPTION: Triangulation minimization may only be applied when using a decomposition strategy based on vertex elimination orderings!" << std::endl;
+
+				ret = false;
+			}
+		}
+		else if (value == "new-min-separator-comp-separators-based")
+		{
+			if (optimizationChoice.used() && std::string(optimizationChoice.value()) == "width")
+			{
+				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"new-min-separator-comp-separators-based\" may only be used when option --opt is set to \"none\"!" << std::endl;
 
 				ret = false;
 			}
@@ -649,11 +666,23 @@ int main(int argc, const char * const * const argv)
 
             libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
         }
-        else if (std::string(strategyChoice.value()) == "new-min-separator") //
+        else if (std::string(strategyChoice.value()) == "new-min-separator-neighbor-based") 
 		{
 			htd::TreeDecompositionViaSeparatorAlgorithm * treeDecompositionAlgorithm = new htd::TreeDecompositionViaSeparatorAlgorithm(libraryInstance);
 
 			treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
+
+			treeDecompositionAlgorithm->setAlgorithmType(1);
+
+			libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
+		}
+		else if (std::string(strategyChoice.value()) == "new-min-separator-comp-separators-based")
+		{
+			htd::TreeDecompositionViaSeparatorAlgorithm * treeDecompositionAlgorithm = new htd::TreeDecompositionViaSeparatorAlgorithm(libraryInstance);
+
+			treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
+
+			treeDecompositionAlgorithm->setAlgorithmType(2);
 
 			libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
 		}
