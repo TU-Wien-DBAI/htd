@@ -55,6 +55,7 @@
 #include <htd/TreeDecompositionFactory.hpp>
 #include <htd/GraphPreprocessorFactory.hpp>
 #include <htd/GraphSeparatorAlgorithmFactory.hpp>
+#include <htd/HighestDegreeSeparatorAlgorithmFactory.hpp>
 
 #include <csignal>
 
@@ -116,6 +117,7 @@ struct htd::LibraryInstance::Implementation
         graphDecompositionFactory_.reset(new htd::GraphDecompositionFactory(manager));
         graphPreprocessorFactory_.reset(new htd::GraphPreprocessorFactory(manager));
         graphSeparatorAlgorithmFactory_.reset(new htd::GraphSeparatorAlgorithmFactory(manager));
+		highestDegreeSeparatorAlgorithmFactory_.reset(new htd::HighestDegreeSeparatorAlgorithmFactory(manager));
     }
 
     /**
@@ -272,6 +274,11 @@ struct htd::LibraryInstance::Implementation
      *  The factory class for the default implementation of the htd::IGraphSeparatorAlgorithm interface.
      */
     std::unique_ptr<htd::GraphSeparatorAlgorithmFactory> graphSeparatorAlgorithmFactory_;
+
+	/**
+	*  The factory class for the default implementation of the htd::IGraphSeparatorAlgorithm interface.
+	*/
+	std::unique_ptr<htd::HighestDegreeSeparatorAlgorithmFactory> highestDegreeSeparatorAlgorithmFactory_;
 };
 
 htd::LibraryInstance::LibraryInstance(htd::id_t id) : implementation_(new Implementation(id))
@@ -587,6 +594,16 @@ htd::GraphSeparatorAlgorithmFactory & htd::LibraryInstance::graphSeparatorAlgori
 const htd::GraphSeparatorAlgorithmFactory & htd::LibraryInstance::graphSeparatorAlgorithmFactory(void) const
 {
     return *(implementation_->graphSeparatorAlgorithmFactory_);
+}
+
+htd::HighestDegreeSeparatorAlgorithmFactory & htd::LibraryInstance::highestDegreeSeparatorAlgorithmFactory(void)
+{
+	return *(implementation_->highestDegreeSeparatorAlgorithmFactory_);
+}
+
+const htd::HighestDegreeSeparatorAlgorithmFactory & htd::LibraryInstance::highestDegreeSeparatorAlgorithmFactory(void) const
+{
+	return *(implementation_->highestDegreeSeparatorAlgorithmFactory_);
 }
 
 #endif /* HTD_HTD_LIBRARYINSTANCE_CPP */

@@ -42,6 +42,8 @@
 #include <htd/MinimumSeparatorAlgorithm.hpp>
 #include <htd/WidthReductionOperation.hpp>
 #include <htd/TrivialTreeDecompositionAlgorithm.hpp>
+#include <htd/HighestDegreeSeparatorAlgorithm.hpp>
+#include <htd/HighestDegreeSeparatorAlgorithmFactory.hpp>
 
 #include <algorithm>
 #include <cstdarg>
@@ -61,7 +63,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*
 	*  @param[in] manager  The management instance to which the current object instance belongs.
 	*/
-	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), separatorAlgorithm_(manager->graphSeparatorAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(true), numberOfSteps_(1), sizeLimit_(6), algorithmType_(1), criteriaType_(3)
+	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), separatorAlgorithm_(manager->graphSeparatorAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(true), numberOfSteps_(3), sizeLimit_(6), algorithmType_(1), criteriaType_(3)
 	{ 
 
 
@@ -217,10 +219,7 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 	
 	htd::IMutableTreeDecomposition * ret = dynamic_cast<htd::IMutableTreeDecomposition *>(implementation_ ->managementInstance_ ->treeDecompositionFactory().createInstance());
 	
-	//implementation_->criteriaType_ = 1;
-
-	std::cout << "CRITERIA: " << getCriteriaType() << std::endl;
-
+	const std::clock_t begin_time = std::clock();
 	if (getAlgorithmType() == 1)
 	{		
 		implementation_->computeMutableDecomposition(ret, graph, preprocessedGraph, NULL, 0);
@@ -229,7 +228,7 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 	{
 		implementation_->computeMutableDecompositionSeparators(ret, graph, preprocessedGraph, NULL, std::vector<vertex_t>(), 0);
 	}
-	
+	std::cout << "Algorithm execution time: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " second(s)." << std::endl;
 	return ret;
 }
 
@@ -417,7 +416,6 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 	neighborsOneComponent.reserve(graph.vertexCount());
 
 	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(graph);		
-
 	if (index != NULL)
 	{
 		htd::vertex_t sep = ret->addChild(index, separator, graph.hyperedgesAtPositions(separator));
@@ -474,6 +472,7 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 				if (!(std::find(components.at(i).begin(), components.at(i).end(), v) != components.at(i).end()))
 					g.removeVertex(v);
 			}
+			std::cout << "COUNTER: " << counter << std::endl;
 			computeMutableDecomposition(ret, g, preprocessedGraph, w, ++counter);
 		}
 		else
@@ -490,7 +489,7 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 	std::vector<std::vector<htd::vertex_t>> components = std::vector<std::vector<htd::vertex_t>>();
 	components.reserve(graph.vertexCount()); 
 	
-	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(graph);
+	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(*graph.cloneGraphStructure());
 	std::vector<vertex_t> separators = separator;
 
 	if (index != NULL)
@@ -535,7 +534,8 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 			}
 			if (criteriaType_ == 2 && comp.size() <= sizeLimit_)
 			{
-				ret->addChild(index, g.vertexVector(), g.hyperedgesAtPositions(g.vertexVector()));
+				if(g.vertexVector() != ret->bagContent(index))
+					ret->addChild(index, g.vertexVector(), g.hyperedgesAtPositions(g.vertexVector()));
 			}
 			else
 			{
@@ -546,7 +546,8 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 	else
 	{
 		MultiHypergraph g = *graph.cloneMultiHypergraph();
-		ret->addChild(index, g.vertexVector() , g.hyperedgesAtPositions(g.vertexVector()));
+		if (g.vertexVector() != ret->bagContent(index))
+			ret->addChild(index, g.vertexVector() , g.hyperedgesAtPositions(g.vertexVector()));
 	}	
 }
 

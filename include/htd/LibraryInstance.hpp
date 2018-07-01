@@ -171,6 +171,11 @@ namespace htd
      */
     class GraphSeparatorAlgorithmFactory;
 
+	/**
+	*  Forward declaration of factory class htd::HighestDegreeSeparatorAlgorithmFactory.
+	*/
+	class HighestDegreeSeparatorAlgorithmFactory;
+
     /**
      *  Central management class of a library instance.
      */
@@ -510,6 +515,16 @@ namespace htd
              *  Access the factory class for the default implementation of the htd::IGraphSeparatorAlgorithm interface.
              */
             HTD_API const htd::GraphSeparatorAlgorithmFactory & graphSeparatorAlgorithmFactory(void) const;
+
+			/**
+			*  Access the factory class for the default implementation of the htd::IGraphSeparatorAlgorithm interface.
+			*/
+			HTD_API htd::HighestDegreeSeparatorAlgorithmFactory & highestDegreeSeparatorAlgorithmFactory(void);
+
+			/**
+			*  Access the factory class for the default implementation of the htd::IGraphSeparatorAlgorithm interface.
+			*/
+			HTD_API const htd::HighestDegreeSeparatorAlgorithmFactory & highestDegreeSeparatorAlgorithmFactory(void) const;
 
         private:
             struct Implementation;
