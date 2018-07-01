@@ -61,7 +61,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*
 	*  @param[in] manager  The management instance to which the current object instance belongs.
 	*/
-	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), separatorAlgorithm_(manager->graphSeparatorAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(true), numberOfSteps_(1), sizeLimit_(6), algorithmType_((std::size_t) 1)
+	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager), separatorAlgorithm_(manager->graphSeparatorAlgorithmFactory().createInstance()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(true), numberOfSteps_(1), sizeLimit_(6), algorithmType_(1), criteriaType_(3)
 	{ 
 
 
@@ -72,7 +72,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*
 	*  @param[in] original The original implementation details structure.
 	*/
-	Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), separatorAlgorithm_(original.separatorAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(original.computeInducedEdges_), numberOfSteps_(original.numberOfSteps_), sizeLimit_(original.sizeLimit_), algorithmType_(original.algorithmType_)
+	Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), separatorAlgorithm_(original.separatorAlgorithm_->clone()), labelingFunctions_(), postProcessingOperations_(), computeInducedEdges_(original.computeInducedEdges_), numberOfSteps_(original.numberOfSteps_), sizeLimit_(original.sizeLimit_), algorithmType_(original.algorithmType_), criteriaType_(original.criteriaType_)
 	{
 		for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
 		{
@@ -217,7 +217,9 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 	
 	htd::IMutableTreeDecomposition * ret = dynamic_cast<htd::IMutableTreeDecomposition *>(implementation_ ->managementInstance_ ->treeDecompositionFactory().createInstance());
 	
-	implementation_->criteriaType_ = 1;
+	//implementation_->criteriaType_ = 1;
+
+	std::cout << "CRITERIA: " << getCriteriaType() << std::endl;
 
 	if (getAlgorithmType() == 1)
 	{		

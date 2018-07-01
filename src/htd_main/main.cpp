@@ -105,6 +105,16 @@ htd_cli::OptionManager * createOptionManager(void)
 		
         manager->registerOption(strategyChoice, "Algorithm Options");
 
+		htd_cli::Choice * criteriaChoice = new htd_cli::Choice("criteria", "Set the decomposition criteria which shall be used with strategy new-min-separator.", "strategy");
+
+		criteriaChoice->addPossibility("number-of-steps", "Stop algorithm after defined number of steps.");
+		criteriaChoice->addPossibility("bag-size", "Stop algorithm when all bags have size smalelr than given size constraint.");
+		criteriaChoice->addPossibility("no-criteria", "No criteria.");		
+
+		criteriaChoice->setDefaultValue("no-criteria");
+
+		manager->registerOption(criteriaChoice, "Criteria Options");
+
         htd_cli::Choice * preprocessingChoice = new htd_cli::Choice("preprocessing", "Set the preprocessing strategy which shall be used to <strategy>.", "strategy");
 
         preprocessingChoice->addPossibility("none", "Do not preprocess the input graph.");
@@ -173,6 +183,8 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
     const htd_cli::Choice & decompositionTypeChoice = optionManager.accessChoice("type");
 
     const htd_cli::Choice & strategyChoice = optionManager.accessChoice("strategy");
+
+	const htd_cli::Choice & criteriaChoice = optionManager.accessChoice("criteria");
 
     const htd_cli::SingleValueOption & seedOption = optionManager.accessSingleValueOption("seed");
 
@@ -642,6 +654,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::Choice & strategyChoice = optionManager->accessChoice("strategy");
 
+		const htd_cli::Choice & criteriaChoice = optionManager->accessChoice("criteria");
+
         const htd_cli::Choice & preprocessingChoice = optionManager->accessChoice("preprocessing");
 
         const htd_cli::Choice & optimizationChoice = optionManager->accessChoice("opt");
@@ -674,6 +688,19 @@ int main(int argc, const char * const * const argv)
 
 			treeDecompositionAlgorithm->setAlgorithmType(1);
 
+			if (std::string(criteriaChoice.value()) == "number-of-steps")
+			{
+				treeDecompositionAlgorithm->setCriteriaType(1);
+			}
+			else if (std::string(criteriaChoice.value()) == "bag-size")
+			{
+				treeDecompositionAlgorithm->setCriteriaType(2);
+			}
+			else
+			{
+				treeDecompositionAlgorithm->setCriteriaType(3);
+			}
+
 			libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
 		}
 		else if (std::string(strategyChoice.value()) == "new-min-separator-comp-separators-based")
@@ -683,6 +710,19 @@ int main(int argc, const char * const * const argv)
 			treeDecompositionAlgorithm->setComputeInducedEdgesEnabled(false);
 
 			treeDecompositionAlgorithm->setAlgorithmType(2);
+
+			if (std::string(criteriaChoice.value()) == "number-of-steps")
+			{
+				treeDecompositionAlgorithm->setCriteriaType(1);
+			}
+			else if (std::string(criteriaChoice.value()) == "bag-size")
+			{
+				treeDecompositionAlgorithm->setCriteriaType(2);
+			}
+			else
+			{
+				treeDecompositionAlgorithm->setCriteriaType(3);
+			}
 
 			libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(treeDecompositionAlgorithm);
 		}
