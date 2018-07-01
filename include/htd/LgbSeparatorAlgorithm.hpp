@@ -2,7 +2,7 @@
 #define HTD_HTD_LGBSEPARATORALGORITHM_HPP
 
 #include <htd/IGraphSeparatorAlgorithm.hpp>
-#include <htd/MultiGraph.hpp>
+#include <htd/LabeledMultiGraph.hpp>
 
 namespace htd
 {
@@ -26,7 +26,7 @@ namespace htd
 
 		HTD_API std::vector<htd::vertex_t> * computeSeparator(const htd::IGraphStructure & graph) const HTD_OVERRIDE;
 
-		HTD_API std::vector<htd::vertex_t> * computeSeparator(htd::MultiGraph * graph) const;
+		HTD_API std::vector<htd::vertex_t> * computeSeparator(htd::LabeledMultiGraph * graph) const;
 
 		HTD_API const htd::LibraryInstance * managementInstance(void) const HTD_NOEXCEPT HTD_OVERRIDE;
 

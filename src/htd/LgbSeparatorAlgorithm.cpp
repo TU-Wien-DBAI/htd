@@ -3,6 +3,7 @@
 
 #include <htd/LgbSeparatorAlgorithm.hpp>
 #include <htd/MultiGraph.hpp>
+#include <htd/LabeledMultiGraph.hpp>
 #include <htd/DepthFirstConnectedComponentAlgorithm.hpp>
 
 #include <algorithm>
@@ -66,6 +67,10 @@ std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(const 
 std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(htd::MultiGraph * graph) const
 {
 	std::vector<htd::vertex_t> * separator = new std::vector<htd::vertex_t>();
+
+	htd:
+
+
 	return separator;
 }
 

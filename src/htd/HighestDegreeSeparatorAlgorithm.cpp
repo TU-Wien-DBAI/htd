@@ -71,7 +71,7 @@ std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSepara
 	{
 		for (auto v2 : graph.neighbors(v1))
 		{
-			if (!newGraph->isEdge(v1, v2)) 
+			if (!newGraph->isEdge(v1, v2) && !newGraph->isEdge(v2, v1)) 
 			{
 				newGraph->addEdge(v1, v2);
 			}
