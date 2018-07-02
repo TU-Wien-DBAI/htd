@@ -100,12 +100,6 @@ struct bin {
 	struct bin *next, *prev;
 };
 
-//struct binGainPair
-//{
-//	int gain;
-//	struct bin * binWithThatGain;
-//};
-//
 struct nodeGainPair
 {
 	int gain;
@@ -194,68 +188,6 @@ void initBins(std::vector<struct bin*> * binspack, std::vector<nodeGainPair> * n
 //	}
 //}
 
-//struct bin * get(htd::vertex_t node)
-//{
-//	if (head == NULL)
-//	{
-//		return nullptr;
-//	}
-//	if (head->node == node)
-//	{
-//		return head;
-//	}
-//	else
-//	{
-//		struct bin *temp = head;
-//		while (temp->next != NULL && temp->node != node)
-//		{
-//			temp = temp->next;
-//		}
-//
-//		return temp;
-//	}
-//
-//	return nullptr;
-//}
-
-//struct bin * at(int position)
-//{
-//	int i = 0;
-//	if (position<1)
-//	{
-//		printf("Invalid Position of Deletion \n");
-//		return nullptr;
-//	}
-//	if (head == NULL)
-//	{
-//		return nullptr;
-//	}
-//	if (position == 1)
-//	{
-//		return head;
-//	}
-//	else
-//	{
-//		struct bin *temp = head;
-//		while (temp->next->next != NULL && i<position - 2)
-//		{
-//			i++;
-//			temp = temp->next;
-//		}
-//		if (i<position - 2)
-//		{
-//			printf("Invalid Position of Deletion \n");
-//			return nullptr;
-//		}
-//		else
-//		{
-//			return temp;
-//		}
-//	}
-//
-//	return nullptr;
-//}
-
 void printBins(std::vector<struct bin*> * binspack)
 {
 	if (binspack->size() == 0)
@@ -264,7 +196,7 @@ void printBins(std::vector<struct bin*> * binspack)
 		return;
 	}
 
-	for (int i = 0; i <= binspack->size(); i++)
+	for (int i = 0; i < binspack->size(); i++)
 	{
 		struct bin * temp = binspack->at(i);
 		printf("Node: %d", temp->node);
@@ -296,6 +228,7 @@ void fillLineGraph(htd::LabeledMultiGraph * lineGraph, htd::LabeledMultiGraph * 
 
 	for (auto v : graph->vertices())
 	{
+		graph->setVertexLabel("edge", v, new htd::Label<int>((int)v));
 		if (graph->neighborCount(v) == 1)
 		{
 
@@ -393,7 +326,10 @@ void computeLs(htd::LabeledMultiGraph * lineGraph, std::size_t numberOfnodes, st
 			for (auto n : lineGraph->neighbors(v))
 			{
 				struct pair * pair = new struct pair;
-				pair->nij = binspack->at(n);
+				if (n <= numberOfnodes)
+				{
+					pair->nij = binspack->at(n - 1);
+				}
 
 				htd::id_t edgeId = v < n ? *lineGraph->associatedEdgeIds(v, n).begin() : *lineGraph->associatedEdgeIds(n, v).begin();
 				if (l1n != nullptr && !(*l1n == lineGraph->edgeLabel("edge", edgeId)))
@@ -403,15 +339,18 @@ void computeLs(htd::LabeledMultiGraph * lineGraph, std::size_t numberOfnodes, st
 				}
 				l1n = &lineGraph->edgeLabel("edge", edgeId);
 
-				pair->lij = &lineGraph->edgeLabel("edge", edgeId);
-				pairs->push_back(*pair);
+				if (n <= numberOfnodes)
+				{
+					pair->lij = &lineGraph->edgeLabel("edge", edgeId);
+					pairs->push_back(*pair);
+				}
 			}
 
 			for (auto n : lineGraph->neighbors(v))
 			{
 				htd::id_t edgeId = v < n ? *lineGraph->associatedEdgeIds(v, n).begin() : *lineGraph->associatedEdgeIds(n, v).begin();
 
-				bool inTheSamePartition = binspack->at(v)->partition == 1 ? (std::find(partition1->begin(), partition1->end(), n) != partition1->end()) : (std::find(partition2->begin(), partition2->end(), n) != partition2->end());
+				bool inTheSamePartition = binspack->at(v - 1)->partition == 1 ? (std::find(partition1->begin(), partition1->end(), n) != partition1->end()) : (std::find(partition2->begin(), partition2->end(), n) != partition2->end());
 
 				if (lineGraph->edgeLabel("edge", edgeId) == *l1n && (inTheSamePartition || n > numberOfnodes))
 				{
@@ -431,14 +370,14 @@ void computeLs(htd::LabeledMultiGraph * lineGraph, std::size_t numberOfnodes, st
 				}
 			}
 
-			binspack->at(v)->l1n = l1n;
-			binspack->at(v)->l1s = l1s;
-			binspack->at(v)->l1o = l1o;
+			binspack->at(v - 1)->l1n = l1n;
+			binspack->at(v - 1)->l1s = l1s;
+			binspack->at(v - 1)->l1o = l1o;
 
-			binspack->at(v)->l2n = l2n;
-			binspack->at(v)->l2s = l2s;
-			binspack->at(v)->l2o = l2o;
-			binspack->at(v)->pairs = pairs;
+			binspack->at(v - 1)->l2n = l2n;
+			binspack->at(v - 1)->l2s = l2s;
+			binspack->at(v - 1)->l2o = l2o;
+			binspack->at(v - 1)->pairs = pairs;
 		}
 	}
 }
@@ -468,38 +407,41 @@ void calculateGains(htd::LabeledMultiGraph * lineGraph, std::size_t numberOfnode
 {
 	for (auto v : lineGraph->vertices())
 	{
-		struct bin *bin = binspack->at(v);
-		if (bin->l1s == 0 && bin->l1o > 0)
+		if (v <= numberOfnodes)
 		{
-			bin->gain = bin->gain + 1; //weight(lineGraph, bin->l1n);
-		}
-		else if (bin->l1s > 0 && bin->l1o == 0)
-		{
-			bin->gain = bin->gain - 1; //weight(lineGraph, bin->l1n);
-		}
-		else if (bin->l1s > 0 && bin->l1o > 0)
-		{
-			// do nothing
-		}
+			struct bin *bin = binspack->at(v - 1);
+			if (bin->l1s == 0 && bin->l1o > 0)
+			{
+				bin->gain = bin->gain + 1; //weight(lineGraph, bin->l1n);
+			}
+			else if (bin->l1s > 0 && bin->l1o == 0)
+			{
+				bin->gain = bin->gain - 1; //weight(lineGraph, bin->l1n);
+			}
+			else if (bin->l1s > 0 && bin->l1o > 0)
+			{
+				// do nothing
+			}
 
-		if (bin->l2s == 0 && bin->l2o > 0)
-		{
-			bin->gain = bin->gain + 1;//weight(lineGraph, bin->l2n);
-		}
-		else if (bin->l2s > 0 && bin->l2o == 0)
-		{
-			bin->gain = bin->gain - 1; //weight(lineGraph, bin->l2n);
-		}
-		else if (bin->l2s > 0 && bin->l2o > 0)
-		{
-			// do nothing
+			if (bin->l2s == 0 && bin->l2o > 0)
+			{
+				bin->gain = bin->gain + 1;//weight(lineGraph, bin->l2n);
+			}
+			else if (bin->l2s > 0 && bin->l2o == 0)
+			{
+				bin->gain = bin->gain - 1; //weight(lineGraph, bin->l2n);
+			}
+			else if (bin->l2s > 0 && bin->l2o > 0)
+			{
+				// do nothing
+			}
 		}
 	}
 }
 
 void findDistinctLabelsInPartitions(std::vector<const htd::ILabel*> *cutLabels, std::vector<const htd::ILabel*> *part1Labels, std::vector<const htd::ILabel*> *part2Labels, std::vector<struct bin*> * binspack)
 {
-	for (int i = 0; i <= binspack->size(); i++)
+	for (int i = 0; i < binspack->size(); i++)
 	{
 		struct bin * temp = binspack->at(i);
 
@@ -628,14 +570,13 @@ int findK(std::vector<struct move> * moves)
 void updateTheGainsOfAdjacentNodes(htd::LabeledMultiGraph * lineGraph, int w1, int w2, std::vector<struct bin*> * binspack, struct bin * node)
 {
 
-	return;
 }
 
 void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnodes, std::vector<htd::vertex_t> *partition1, std::vector<htd::vertex_t> *partition2)
 {
 	int LIMIT = 10; // TODO implement logic for limit
 	// Structures
-	std::vector<struct bin*> * binspack = new std::vector<struct bin*>(numberOfnodes);
+	std::vector<struct bin*> * binspack = new std::vector<struct bin*>();
 	
 	std::vector<struct nodeGainPair> * nodeGainPairsPartition1 = new std::vector<struct nodeGainPair>();
 	nodeGainPairsPartition1->reserve(numberOfnodes);
@@ -676,16 +617,16 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 	int gainMax = 0;
 	
 	// 9
-	do 
+	do
 	{
 		loopno++;
-		
+
 		// 9.1
 		htd::LabeledMultiGraph * tempCopy = lineGraph->clone();
-		
+
 		// 9.2
 		initBins(binspack, nodeGainPairsPartition1, nodeGainPairsPartition2);
-		
+
 		// Copies
 		std::vector<struct bin*> * binspackCopy(binspack);
 		std::vector<struct nodeGainPair> * nodeGainPairsPartition1Copy(nodeGainPairsPartition1);
@@ -693,21 +634,21 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 
 		// 9.3
 		calculateGains(tempCopy, numberOfnodes, binspackCopy);
-		
+
 		// 9.4
 		prevLoadDiff = loadDiff;
 		int seqno = 0;
-		
+
+		std::vector<htd::vertex_t> *srcP = new std::vector<htd::vertex_t>();
+		partition1->reserve(numberOfnodes);
+
+		std::vector<htd::vertex_t> *dstP = new std::vector<htd::vertex_t>();
+		partition2->reserve(numberOfnodes);
+
 		// 9.5
 		bool found = false;
 		do {
 			seqno++;
-
-			std::vector<htd::vertex_t> *srcP = new std::vector<htd::vertex_t>();
-			partition1->reserve(numberOfnodes);
-
-			std::vector<htd::vertex_t> *dstP = new std::vector<htd::vertex_t>();
-			partition2->reserve(numberOfnodes);
 
 			int wSrc = 0;
 			int wDst = 0;
@@ -720,7 +661,7 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 				dstP = partition2;
 				wDst = w2;
 			}
-			else 
+			else
 			{
 				srcP = partition2;
 				wSrc = w2;
@@ -728,15 +669,15 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 				dstP = partition1;
 				wDst = w1;
 			}
-			
-			// 9.5.2
-			std::sort(nodeGainPairsPartition1Copy->begin(), nodeGainPairsPartition1Copy->end(), sortNodeGainPairs);
-			
-			std::sort(nodeGainPairsPartition2Copy->begin(), nodeGainPairsPartition2Copy->end(), sortNodeGainPairs);
-			
-			std::sort(nodeGainPairsPartition1->begin(), nodeGainPairsPartition1->end(), sortNodeGainPairs);
 
-			std::sort(nodeGainPairsPartition2->begin(), nodeGainPairsPartition2->end(), sortNodeGainPairs);
+			// 9.5.2 TODO
+			//std::sort(nodeGainPairsPartition1Copy->begin(), nodeGainPairsPartition1Copy->end(), sortNodeGainPairs);
+			//
+			//std::sort(nodeGainPairsPartition2Copy->begin(), nodeGainPairsPartition2Copy->end(), sortNodeGainPairs);
+			//
+			//std::sort(nodeGainPairsPartition1->begin(), nodeGainPairsPartition1->end(), sortNodeGainPairs);
+
+			//std::sort(nodeGainPairsPartition2->begin(), nodeGainPairsPartition2->end(), sortNodeGainPairs);
 
 			int gain = 0;
 			htd::index_t maxGainIndex = 0;
@@ -787,7 +728,8 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 				updateTheGainsOfAdjacentNodes(tempCopy, w1, w2, binspackCopy, nodeWithMaxGain);
 				moveInTemp(binspackCopy, nodeWithMaxGain); // TODO
 			}
-		} while (found);
+		} while (1 > 2);
+		//} while (found);
 
 		int k = findK(moves);
 
@@ -798,10 +740,11 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 
 		originalW1 = w1;
 		originalW2 = w2;
-	} while ((gainMax > 0 || (gainMax = 0 && prevLoadDiff > loadDiff)) && loopno < LIMIT); // 10
+	}while (1 > 2);
+	//} while ((gainMax > 0 || (gainMax = 0 && prevLoadDiff > loadDiff)) && loopno < LIMIT); // 10
 
 	printBins(binspack);
-	
+
 	return;
 }
 
@@ -816,9 +759,9 @@ std::vector<htd::vertex_t> * revertLineGraph(htd::LabeledMultiGraph * graph, htd
 			if (lineGraph->isEdge(v1, v2) || lineGraph->isEdge(v2, v1))
 			{
 				htd::id_t edgeId = v1 < v2 ? *lineGraph->associatedEdgeIds(v1, v2).begin() : *lineGraph->associatedEdgeIds(v2, v1).begin();
-				for (htd::vertex_t u : graph->vertices)
+				for (htd::vertex_t u : graph->vertices())
 				{
-					if (graph->vertexLabel("edge", u) == lineGraph->edgeLabel("edge", edgeId))
+					if (graph->vertexLabel("edge", u) == lineGraph->edgeLabel("edge", edgeId) && std::find(separator->begin(), separator->end(), u) == separator->end())
 					{
 						separator->push_back(u);
 					}
@@ -826,9 +769,9 @@ std::vector<htd::vertex_t> * revertLineGraph(htd::LabeledMultiGraph * graph, htd
 			}
 		}
 	}
+
 	return separator;
 }
-
 
 std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(htd::LabeledMultiGraph * graph) const
 {
@@ -864,8 +807,7 @@ std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(htd::L
 	float eps = 0.5f;
 
 	lgb(lineGraph, eps, lineGraphNoArtifCount, partition1, partition2);
-	system("pause");
-	return revertLineGraph(graph, lineGraph, partition1, partition2);;
+	return revertLineGraph(graph, lineGraph, partition1, partition2);
 }
 
 const htd::LibraryInstance * htd::LgbSeparatorAlgorithm::managementInstance(void) const HTD_NOEXCEPT
