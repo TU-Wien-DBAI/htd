@@ -634,14 +634,14 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDeco
     {
         if (dup2(outpipefd[0], STDIN_FILENO) < 0)
         {
-            return std::string("");
+            _Exit(0);
         };
 
         close(outpipefd[1]);
 
         if (dup2(inpipefd[1], STDOUT_FILENO) < 0)
         {
-            return std::string("");
+            _Exit(0);
         };
 
         close(inpipefd[0]);

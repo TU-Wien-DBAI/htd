@@ -145,6 +145,7 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(optimizationChoice, "Optimization Options");
 
+#ifndef BUILD_EXTERNAL_SOLVERS
         htd_cli::Choice * solverChoice = new htd_cli::Choice("solver", "use an external <solver>", "solver");
 
         solverChoice->addPossibility("all", "Use all available solver.");
@@ -169,6 +170,7 @@ htd_cli::OptionManager * createOptionManager(void)
         solverChoice->setDefaultValue("htd");
 
         manager->registerOption(solverChoice, "Solver Options");
+#endif
 
         htd_cli::SingleValueOption * iterationOption = new htd_cli::SingleValueOption("iterations", "Set the number of iterations to be performed during optimization to <count> (0 = infinite). (Default: 10)", "count");
 
@@ -655,8 +657,9 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::Choice & optimizationChoice = optionManager->accessChoice("opt");
 
+#ifndef BUILD_EXTERNAL_SOLVERS
         const htd_cli::Choice & solverChoice = optionManager->accessChoice("solver");
-
+#endif
         const htd_cli::SingleValueOption & iterationOption = optionManager->accessSingleValueOption("iterations");
 
         const htd_cli::SingleValueOption & instanceOption = optionManager->accessSingleValueOption("instance");
@@ -759,6 +762,8 @@ int main(int argc, const char * const * const argv)
             if (!error)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
+
+#ifndef BUILD_EXTERNAL_SOLVERS
                 if (solverChoice.used() && strcmp(solverChoice.value(), "htd") != 0)
                 {
 #ifdef MRPRAJESH_PATH
@@ -853,6 +858,9 @@ int main(int argc, const char * const * const argv)
                     }
                 }
                 else if (externalOption.used())
+#else
+                    if (externalOption.used())
+#endif
                 {
                     decompAlgorithm = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                 }

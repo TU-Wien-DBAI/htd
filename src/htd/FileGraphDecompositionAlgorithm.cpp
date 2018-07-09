@@ -562,6 +562,9 @@ void htd::FileGraphDecompositionAlgorithm::Implementation::parseBagLine(std::str
             buckets.push_back(stoul(i));
         }
     }
+
+    std::sort(buckets.begin(), buckets.end());
+
     getInducedEdges(buckets, graph, inducedEdges, notfoundEdges);
 
     decomp->addVertex(std::vector<htd::vertex_t>(buckets), graph.hyperedgesAtPositions(inducedEdges));

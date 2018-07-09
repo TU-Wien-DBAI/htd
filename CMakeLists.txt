@@ -134,6 +134,9 @@ if (NOT DEFINED BUILD_EXTERNAL_SOLVERS)
             )
     get_filename_component(minfill_mrs_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/minfill_mrs" ABSOLUTE)
     add_definitions(-DMINFILL_MRS_PATH="${minfill_mrs_path}")
+else()
+
+    add_definitions(-DBUILD_EXTERNAL_SOLVERS)
 endif ()
 
 subdirs(src/htd)
