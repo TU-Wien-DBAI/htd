@@ -115,6 +115,14 @@ htd_cli::OptionManager * createOptionManager(void)
 
 		manager->registerOption(criteriaChoice, "Criteria Options");
 
+		htd_cli::SingleValueOption * stepsOption = new htd_cli::SingleValueOption("steps", "Set the number of steps !. (Default: 3)", "count");
+
+		manager->registerOption(stepsOption, "Number of steps");
+
+		htd_cli::SingleValueOption * sizeOption = new htd_cli::SingleValueOption("size", "Set the limit for bag size !. (Default: 6)", "count");
+
+		manager->registerOption(sizeOption, "Bag size");
+
         htd_cli::Choice * preprocessingChoice = new htd_cli::Choice("preprocessing", "Set the preprocessing strategy which shall be used to <strategy>.", "strategy");
 
         preprocessingChoice->addPossibility("none", "Do not preprocess the input graph.");
@@ -185,6 +193,10 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
     const htd_cli::Choice & strategyChoice = optionManager.accessChoice("strategy");
 
 	const htd_cli::Choice & criteriaChoice = optionManager.accessChoice("criteria");
+
+	const htd_cli::SingleValueOption & stepsOption = optionManager.accessSingleValueOption("steps");
+
+	const htd_cli::SingleValueOption & sizeOption = optionManager.accessSingleValueOption("size");
 
     const htd_cli::SingleValueOption & seedOption = optionManager.accessSingleValueOption("seed");
 
@@ -656,6 +668,10 @@ int main(int argc, const char * const * const argv)
 
 		const htd_cli::Choice & criteriaChoice = optionManager->accessChoice("criteria");
 
+		const htd_cli::SingleValueOption & stepsOption = optionManager->accessSingleValueOption("steps");
+
+		const htd_cli::SingleValueOption & sizeOption = optionManager->accessSingleValueOption("size");
+
         const htd_cli::Choice & preprocessingChoice = optionManager->accessChoice("preprocessing");
 
         const htd_cli::Choice & optimizationChoice = optionManager->accessChoice("opt");
@@ -691,10 +707,18 @@ int main(int argc, const char * const * const argv)
 			if (std::string(criteriaChoice.value()) == "number-of-steps")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(1);
+
+				if (std::stoul(stepsOption.value(), nullptr, 10)) {
+					treeDecompositionAlgorithm->setNumberOfSteps(std::stoul(stepsOption.value(), nullptr, 10));
+				}
+					
 			}
 			else if (std::string(criteriaChoice.value()) == "bag-size")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(2);
+
+				if (sizeOption.used())
+					treeDecompositionAlgorithm->setSizeLimit(std::stoul(sizeOption.value(), nullptr, 10));
 			}
 			else
 			{
@@ -714,10 +738,17 @@ int main(int argc, const char * const * const argv)
 			if (std::string(criteriaChoice.value()) == "number-of-steps")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(1);
+
+				if (std::stoul(stepsOption.value(), nullptr, 10)) {
+					treeDecompositionAlgorithm->setNumberOfSteps(std::stoul(stepsOption.value(), nullptr, 10));
+				}
 			}
 			else if (std::string(criteriaChoice.value()) == "bag-size")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(2);
+
+				if (sizeOption.used())
+					treeDecompositionAlgorithm->setSizeLimit(std::stoul(sizeOption.value(), nullptr, 10));
 			}
 			else
 			{
