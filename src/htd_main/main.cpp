@@ -707,10 +707,9 @@ int main(int argc, const char * const * const argv)
 			if (std::string(criteriaChoice.value()) == "number-of-steps")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(1);
-
-				if (std::stoul(stepsOption.value(), nullptr, 10)) {
-					treeDecompositionAlgorithm->setNumberOfSteps(std::stoul(stepsOption.value(), nullptr, 10));
-				}
+				if (stepsOption.used()) {					
+						treeDecompositionAlgorithm->setNumberOfSteps(std::stoul(stepsOption.value(), nullptr, 10));
+				}				
 					
 			}
 			else if (std::string(criteriaChoice.value()) == "bag-size")
@@ -738,8 +737,7 @@ int main(int argc, const char * const * const argv)
 			if (std::string(criteriaChoice.value()) == "number-of-steps")
 			{
 				treeDecompositionAlgorithm->setCriteriaType(1);
-
-				if (std::stoul(stepsOption.value(), nullptr, 10)) {
+				if (stepsOption.used()) {
 					treeDecompositionAlgorithm->setNumberOfSteps(std::stoul(stepsOption.value(), nullptr, 10));
 				}
 			}
