@@ -670,17 +670,20 @@ int main(int argc, const char * const * const argv)
 					separator = separatorAlgorithm->computeSeparator(*importer.import(std::cin));
 				}
 
-				if (separator != nullptr && separator->size() > 0)
+				if (separator != nullptr)
 				{
 					std::vector<htd::vertex_t>::iterator it;
 
 					std::cout << "The size of the separator is: " << separator->size() << std::endl;
 
-					std::cout << "The separator contains the following vertices: ";
-
-					for (it = separator->begin(); it != separator->end(); it++)
+					if (separator->size() > 0)
 					{
-						std::cout << *it << " ";
+						std::cout << "The separator contains the following vertices: ";
+
+						for (it = separator->begin(); it != separator->end(); it++)
+						{
+							std::cout << *it << " ";
+						}
 					}
 				}
 
