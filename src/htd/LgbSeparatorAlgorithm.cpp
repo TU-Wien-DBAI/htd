@@ -112,6 +112,7 @@ struct move
 	int gain;
 	int loadDiff;
 	int cutSize;
+	struct bin * bin;
 };
 
 void initBins(std::vector<struct bin*> * binspack, std::vector<binGainPair *> * binGainPairsPartition1, std::vector<binGainPair *> * binGainPairsPartition2)
@@ -252,8 +253,6 @@ void initializePartitions(htd::LabeledMultiGraph * lineGraph, std::size_t number
 	std::mt19937 twister(rand_dev());
 	std::shuffle(seq.begin(), seq.end(), twister);
 
-	std::cout << std::floor(numberOfnodes / 2) << std::endl;
-
 	for (int i = 1; i <= std::floor(numberOfnodes / 2); i++)
 	{
 		htd::vertex_t vertex = seq.at(i-1);
@@ -349,7 +348,6 @@ void computeLs(htd::LabeledMultiGraph * lineGraph, std::size_t numberOfnodes, st
 
 void calculateGains(htd::LabeledMultiGraph * lineGraph, const size_t &numberOfnodes, std::vector<bin *> * binspack);
 
-
 void updateBinPairPartitions(std::vector<binGainPair *> * binGainPairsPartition1, std::vector<binGainPair *> * binGainPairsPartition2, std::vector<bin *> * binspack)
 {
 	for (int i = 0; i < 5; i++)
@@ -379,7 +377,6 @@ void updateBinPairPartitions(std::vector<binGainPair *> * binGainPairsPartition1
 		}
 	}
 }
-
 
 void updateBins(std::vector<bin *> * binspack)
 {
@@ -824,6 +821,68 @@ void reCalculateCutLabels(std::vector<bin *> * binspack, std::vector<const htd::
 	}
 }
 
+void move(htd::LabeledMultiGraph * lineGraph, struct move move, std::vector<bin *> * binspack, std::vector<const htd::ILabel*> *cutLabels, std::vector<htd::vertex_t> *partition1, std::vector<htd::vertex_t> *partition2, std::vector<binGainPair *> * binGainPairsPartition1, std::vector<binGainPair *> * binGainPairsPartition2, int *w1, int *w2)
+{
+	std::vector<htd::vertex_t> *srcP = new std::vector<htd::vertex_t>();
+	partition1->reserve(binspack->size());
+
+	std::vector<htd::vertex_t> *dstP = new std::vector<htd::vertex_t>();
+	partition2->reserve(binspack->size());
+
+	int wSrc = 0, wDst = 0;
+
+	if (*w1 > *w2)
+	{
+		srcP = partition1, wSrc = *w1;
+		dstP = partition2, wDst = *w2;
+	}
+	else
+	{
+		srcP = partition2, wSrc = *w2;
+		dstP = partition1, wDst = *w1;
+	}
+
+	struct bin * bin = move.bin;
+
+	updateW1W2(&wSrc, &wDst, bin);
+
+	if (w1 > w2)
+	{
+		*w1 = wSrc, *w2 = wDst;
+	}
+	else
+	{
+		*w2 = wSrc, *w1 = wDst;
+	}
+
+	bin->locked = true;
+
+	updateTheGainsOfAdjacentNodes(lineGraph, *w1, *w2, binspack, bin);
+
+	updateBins(binspack);
+
+	updateBinPairPartitions(binGainPairsPartition1, binGainPairsPartition2, binspack);
+
+	if (srcP->size() > 0)
+	{
+		srcP->erase(srcP->begin());
+	}
+
+	dstP->push_back(bin->node);
+
+	adjustLabels(lineGraph, binspack, bin, partition1, partition2);
+
+	reCalculateCutLabels(binspack, cutLabels);
+}
+
+void getBinWithMaxGain(std::vector<binGainPair *> * binGainPairsPartition2Copy, bin * &nodeWithMaxGain)
+{
+	for (int i = 4; i >= 0; i--)
+	{
+		if (binGainPairsPartition2Copy->at(i)->bin != nullptr) { nodeWithMaxGain = binGainPairsPartition2Copy->at(i)->bin; break; }
+	}
+}
+
 void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnodes, std::vector<htd::vertex_t> *partition1, std::vector<htd::vertex_t> *partition2)
 {
 	int LIMIT = 10; // TODO implement logic for limit
@@ -892,49 +951,49 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 			}
 
 			int gain = 0;
-			struct bin * nodeWithMaxGain = new struct bin;
+			struct bin * binWithMaxGain = new struct bin;
 			found = false;
 
 			if (w1 > w2)
 			{
 				gain = binGainPairsPartition1Copy->at(binGainPairsPartition1Copy->size() - 1)->gain;
-				for (int i = 4; i >= 0 ; i--)
-				{
-					if (binGainPairsPartition1Copy->at(i)->bin != nullptr) { nodeWithMaxGain = binGainPairsPartition1Copy->at(i)->bin; break; }
-				}
+				getBinWithMaxGain(binGainPairsPartition1Copy, binWithMaxGain);
 			}
 			else
 			{
 				gain = binGainPairsPartition2Copy->at(binGainPairsPartition2Copy->size() - 1)->gain;
-				for (int i = 4; i >= 0; i--)
-				{
-					if (binGainPairsPartition2Copy->at(i)->bin != nullptr) { nodeWithMaxGain = binGainPairsPartition2Copy->at(i)->bin; break; }
-				}
+				getBinWithMaxGain(binGainPairsPartition2Copy, binWithMaxGain);
 			}
 
-			if (nodeWithMaxGain != nullptr && !nodeWithMaxGain->locked)
+			if (binWithMaxGain != nullptr && !binWithMaxGain->locked)
 			{ 
 				found = true; 
-				gainMax = nodeWithMaxGain->gain;
+				gainMax = binWithMaxGain->gain;
 			}
 
 			if (found)
 			{
-				updateW1W2(&wSrc, &wDst, nodeWithMaxGain);
+				updateW1W2(&wSrc, &wDst, binWithMaxGain);
 
-				if (w1 > w2) { w1 = wSrc, w2 = wDst; }
-				else { w2 = wSrc, w1 = wDst; }
+				if (w1 > w2) 
+				{ 
+					w1 = wSrc, w2 = wDst; 
+				}
+				else 
+				{ 
+					w2 = wSrc, w1 = wDst; 
+				}
 
 				loadDiff = abs(wSrc - wDst);
 
 				struct move *move = new struct move;
-				move->gain = nodeWithMaxGain->gain;
+				move->gain = binWithMaxGain->gain;
 				move->seq = seqno;
 				move->loadDiff = loadDiff;
-
-				nodeWithMaxGain->locked = true;
+				move->bin = binWithMaxGain;
+				binWithMaxGain->locked = true;
 				
-				updateTheGainsOfAdjacentNodes(tempCopy, w1, w2, binspackCopy, nodeWithMaxGain);
+				updateTheGainsOfAdjacentNodes(tempCopy, w1, w2, binspackCopy, binWithMaxGain);
 				updateBins(binspackCopy);
 
 				updateBinPairPartitions(binGainPairsPartition1Copy, binGainPairsPartition2Copy, binspackCopy);
@@ -943,9 +1002,9 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 				{
 					srcP->erase(srcP->begin());	
 				}
-				dstP->push_back(nodeWithMaxGain->node);
+				dstP->push_back(binWithMaxGain->node);
 
-				adjustLabels(tempCopy, binspackCopy, nodeWithMaxGain, partition1, partition2);
+				adjustLabels(tempCopy, binspackCopy, binWithMaxGain, partition1, partition2);
 
 				reCalculateCutLabels(binspackCopy, cutLabels);
 				move->cutSize = cutLabels->size();
@@ -957,15 +1016,17 @@ void lgb(htd::LabeledMultiGraph * lineGraph, float eps, std::size_t numberOfnode
 
 		w1 = originalW1, w2 = originalW2;
 
-		if (cutLabels->size() >= moves->at(k).cutSize || loadDiff >= moves->at(k).loadDiff)
+		if (moves->at(k).cutSize <= cutLabels->size() || moves->at(k).loadDiff <= loadDiff)
 		{
-			// Do the "do" loop k times.
+			for (int i = 0; i <= k; i++)
+			{
+				move(lineGraph, moves->at(i), binspack, cutLabels, partition1, partition2, binGainPairsPartition1, binGainPairsPartition2, &w1, &w2);
+			}
 		}
 
 		originalW1 = w1, originalW2 = w2;
-	} while ((gainMax > 0 || (gainMax = 0 && prevLoadDiff > loadDiff)) && loopNo < LIMIT); // 10
 
-	printBins(binspack);
+	} while ((gainMax > 0 || (gainMax = 0 && prevLoadDiff > loadDiff)) && loopNo < LIMIT); // 10
 }
 
 std::vector<htd::vertex_t> * revertLineGraph(htd::LabeledMultiGraph * graph, htd::LabeledMultiGraph * lineGraph, std::vector<htd::vertex_t> *partition1, std::vector<htd::vertex_t> *partition2)
@@ -1000,23 +1061,6 @@ std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(htd::L
 	
 	fillLineGraph(lineGraph, graph);
 
-	std::cout << "LINE GRAPH VERTICES:  " << lineGraph->vertexCount() << std::endl;
-	for (auto v1 : lineGraph->vertices())
-	{
-		for (auto v2 : lineGraph->neighbors(v1))
-		{
-			if (lineGraph->isEdge(v1, v2)) {
-				std::cout << "" <<std::endl;
-				std::cout << v1 << " -  " << v2 << std::endl;
-				std::ostream stream(nullptr);
-				stream.rdbuf(std::cout.rdbuf());
-				std::cout << "Label ";
-				lineGraph->edgeLabel("edge", *lineGraph->associatedEdgeIds(v1, v2).begin()).print(stream);
-				std::cout << "" << std::endl;
-			}
-		}
-	}
-
 	std::size_t lineGraphNoArtifCount = graph->edgeCount(); // Number of vertices in the line graph not counting artificial nodes.
 
 	std::vector<htd::vertex_t> *partition1 = new std::vector<htd::vertex_t>();
@@ -1025,9 +1069,10 @@ std::vector<htd::vertex_t> * htd::LgbSeparatorAlgorithm::computeSeparator(htd::L
 	std::vector<htd::vertex_t> *partition2 = new std::vector<htd::vertex_t>();
 	partition2->reserve(lineGraphNoArtifCount);
 	
-	float eps = 0.5f;
+	float eps = 0.5f; // TODO use eps?
 
 	lgb(lineGraph, eps, lineGraphNoArtifCount, partition1, partition2);
+
 	return revertLineGraph(graph, lineGraph, partition1, partition2);
 }
 

@@ -13,14 +13,14 @@
 #include <ctime>
 #include <random>
 /**
-*  Private implementation details of class htd::HighestDegreeAlgorithm.
+*  Private implementation details of class htd::HighestDegreeSeparatorAlgorithm.
 */
 struct htd::HighestDegreeSeparatorAlgorithm::Implementation
 {
 	/**
 	*  Constructor for the implementation details structure.
 	*
-	*  @param[in] manager   The management instance to which the current object instance belongs.
+	*  @param[in] manager The management instance to which the current object instance belongs.
 	*/
 	Implementation(const htd::LibraryInstance * const manager) : managementInstance_(manager) 
 	{
@@ -64,26 +64,62 @@ std::vector<htd::vertex_t> getKeys(std::unordered_map<htd::vertex_t, bool> list)
 
 std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSeparator(const htd::IGraphStructure & graph) const
 {
+	if (graph.vertexCount() <= 2)
+	{
+		return new std::vector<htd::vertex_t>();
+	}
+
 	htd::MultiGraph * newGraph = new htd::MultiGraph(managementInstance(), graph.vertexCount());
 	
 	const std::clock_t begin_time = std::clock();
-	for (auto v1 : graph.vertices()) 
+
+	htd::index_t index = 1;
+
+	std::unordered_map<htd::vertex_t, htd::index_t> indices;
+
+	for (htd::vertex_t vertex : graph.vertices())
 	{
-		for (auto v2 : graph.neighbors(v1))
+		indices.emplace(vertex, index++);
+	}
+
+	for (htd::vertex_t v1 : graph.vertices()) 
+	{
+		for (htd::vertex_t v2 : graph.neighbors(v1))
 		{
-			if (!newGraph->isEdge(v1, v2) && !newGraph->isEdge(v2, v1)) 
+			if (!newGraph->isEdge(indices.at(v1), indices.at(v2)) && !newGraph->isEdge(indices.at(v2), indices.at(v1)))
 			{
-				newGraph->addEdge(v1, v2);
+					newGraph->addEdge(indices.at(v1), indices.at(v2));
 			}
 		}
 	}
 	std::cout << "Algorithm execution time: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " second(s)." << std::endl;
 
-	return computeSeparator(newGraph);
+	std::vector<htd::vertex_t> * separatorIndex = computeSeparator(newGraph);
+
+	std::vector<htd::vertex_t> * separator = new std::vector<htd::vertex_t>();
+	separator->reserve(separatorIndex->size());
+
+	for (vertex_t i : *separatorIndex)
+	{
+		for (vertex_t v : graph.vertices())
+		{
+			if (i == indices.at(v))
+			{
+				separator->push_back(v);
+			}
+		}		
+	}
+	
+	return separator;
 }
 
 std::vector<htd::vertex_t> * htd::HighestDegreeSeparatorAlgorithm::computeSeparator(htd::MultiGraph * graph) const
 {
+	if (graph->vertexCount() <= 2)
+	{
+		return new std::vector<htd::vertex_t>();
+	}
+
 	const std::clock_t begin_time = std::clock();
 	
 	htd::DepthFirstConnectedComponentAlgorithm conectedComponentsAlgorithm(managementInstance());
