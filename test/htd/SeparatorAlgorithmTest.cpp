@@ -69,11 +69,11 @@ TEST(SeparatorAlgorithmTest, CompareAlgorithms)
 	graph->addEdge(6, 9);
 	graph->addEdge(7, 8);
 
-	htd::HighestDegreeSeparatorAlgorithm * separatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
-	hdSeparator = separatorAlgorithm->computeSeparator(graph);
+	htd::HighestDegreeSeparatorAlgorithm * highestDegreerSeparatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
+	hdSeparator = highestDegreerSeparatorAlgorithm->computeSeparator(graph);
 
-	htd::LgbSeparatorAlgorithm * separatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
-	lgbSeparator = separatorAlgorithm->computeSeparator(graph);
+	htd::LgbSeparatorAlgorithm * lgbSeparatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
+	lgbSeparator = lgbSeparatorAlgorithm->computeSeparator(*graph);
 
 	ASSERT_TRUE(hdSeparator > lgbSeparator);
 	ASSERT_EQ((std::size_t)1, hdSeparator->size());
@@ -81,7 +81,8 @@ TEST(SeparatorAlgorithmTest, CompareAlgorithms)
 	
 	delete hdSeparator;
 	delete lgbSeparator;
-	delete separatorAlgorithm;
+	delete highestDegreerSeparatorAlgorithm;
+	delete lgbSeparatorAlgorithm;
     delete libraryInstance;
 }
 
@@ -104,11 +105,11 @@ TEST(SeparatorAlgorithmTest, CompareAlgorithms2)
 	graph->addEdge(6, 8);
 	graph->addEdge(6, 9);
 
-	htd::HighestDegreeSeparatorAlgorithm * separatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
-	hdSeparator = separatorAlgorithm->computeSeparator(graph);
+	htd::HighestDegreeSeparatorAlgorithm * highestDegreerSeparatorAlgorithm = new htd::HighestDegreeSeparatorAlgorithm(libraryInstance);
+	hdSeparator = highestDegreerSeparatorAlgorithm->computeSeparator(graph);
 
-	htd::LgbSeparatorAlgorithm * separatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
-	lgbSeparator = separatorAlgorithm->computeSeparator(graph);
+	htd::LgbSeparatorAlgorithm * lgbSeparatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
+	lgbSeparator = lgbSeparatorAlgorithm->computeSeparator(*graph);
 
 	ASSERT_TRUE(hdSeparator > lgbSeparator);
 	ASSERT_EQ((std::size_t)1, hdSeparator->size());
@@ -116,7 +117,8 @@ TEST(SeparatorAlgorithmTest, CompareAlgorithms2)
 
 	delete hdSeparator;
 	delete lgbSeparator;
-	delete separatorAlgorithm;
+	delete highestDegreerSeparatorAlgorithm;
+	delete lgbSeparatorAlgorithm;
 	delete libraryInstance;
 }
 
