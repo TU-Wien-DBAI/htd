@@ -159,7 +159,7 @@ struct htd::TreeDecompositionViaSeparatorAlgorithm::Implementation
 	*  @return A mutable tree decompostion of the given graph.
 	*/
 	
-	void computeMutableDecomposition(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, int counter) const;
+	void computeMutableDecomposition(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, int counter, std::vector<vertex_t> oldNeighbors) const;
 
 	void computeMutableDecompositionSeparators(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, std::vector<vertex_t> oldSeparator, int counter) const;
 
@@ -220,7 +220,7 @@ htd::ITreeDecomposition * htd::TreeDecompositionViaSeparatorAlgorithm::computeDe
 	const std::clock_t begin_time = std::clock();
 	if (getAlgorithmType() == 1)
 	{		
-		implementation_->computeMutableDecomposition(ret, graph, preprocessedGraph, NULL, 0);
+		implementation_->computeMutableDecomposition(ret, graph, preprocessedGraph, NULL, 0, * new std::vector<vertex_t>());
 	}
 	else
 	{
@@ -403,7 +403,7 @@ htd::TreeDecompositionViaSeparatorAlgorithm * htd::TreeDecompositionViaSeparator
 	return new TreeDecompositionViaSeparatorAlgorithm(*this);
 }
 
-void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutableDecomposition(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, int counter) const
+void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutableDecomposition(htd::IMutableTreeDecomposition * ret, const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, vertex_t index, int counter, std::vector<vertex_t> oldNeighbors) const
 {
 	MultiHypergraph  graphWithoutSeparator = MultiHypergraph(managementInstance_);
 	std::vector<std::vector<htd::vertex_t>> components = std::vector<std::vector<htd::vertex_t>>();
@@ -414,24 +414,34 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 	neighborsOneComponent.reserve(graph.vertexCount());
 
 	std::vector<vertex_t> separator = *separatorAlgorithm_->computeSeparator(graph);		
-	if (index != NULL)
-	{
-		if (separator.size() > 0) {
-			htd::vertex_t sep = ret->addChild(index, separator, graph.hyperedgesAtPositions(separator));
-			index = sep;
-		}		
-	}
-	else
-	{
-		htd::vertex_t root = ret->insertRoot(separator, graph.hyperedgesAtPositions(separator));
-		index = root;
-	}
-	
+
 	graphWithoutSeparator.assign(*graph.cloneMultiHypergraph());
 	for (int i = 0; i < separator.size(); i++)
 	{
 		graphWithoutSeparator.removeVertex(separator.at(i));
 	}
+
+	if (index != NULL)
+	{
+		if (separator.size() > 0) {
+			std::vector<vertex_t> separatorWithNeighbords = separator;
+			for (vertex_t n : oldNeighbors) {
+				if(graphWithoutSeparator.isVertex(n) && !(std::find(separatorWithNeighbords.begin(), separatorWithNeighbords.end(), n) != separatorWithNeighbords.end()))
+					separatorWithNeighbords.push_back(n);
+			}				
+			std::sort(separatorWithNeighbords.begin(), separatorWithNeighbords.end());
+			htd::vertex_t sep = ret->addChild(index, separatorWithNeighbords, graphWithoutSeparator.hyperedgesAtPositions(separatorWithNeighbords));
+			index = sep;
+		}		
+	}
+	else
+	{
+		std::sort(separator.begin(), separator.end());
+		htd::vertex_t root = ret->insertRoot(separator, graph.hyperedgesAtPositions(separator));
+		index = root;
+	}
+	
+	
 	managementInstance_->connectedComponentAlgorithmFactory().createInstance()->determineComponents(graphWithoutSeparator, components);
 
 	for (std::vector<htd::vertex_t> comp : components)
@@ -454,17 +464,36 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 					}
 				}
 			}
-		}
+		}		
 		neighbors.push_back(neighborsOneComponent);
 	}
+
 
 	//******* TREE DECOMPOSITION *********//
 
 	for (unsigned int i = 0; i < neighbors.size(); i++)
 	{
-		if (neighbors.at(i).size() > 0) {
-			htd::vertex_t w = ret->addChild(index, neighbors.at(i), graph.hyperedgesAtPositions(neighbors.at(i)));
-			index = w;
+		htd::vertex_t w;
+		if (neighbors.at(i).size() > 0) {	
+			for (vertex_t n : oldNeighbors)
+			{	
+				if (std::find(components.at(i).begin(), components.at(i).end(), n) != components.at(i).end() && !(std::find(neighbors.at(i).begin(), neighbors.at(i).end(), n) != neighbors.at(i).end()))
+					neighbors.at(i).push_back(n);
+			}
+			std::sort(neighbors.at(i).begin(), neighbors.at(i).end());
+			bool isInDecomp = false;
+			for (vertex_t v : ret->vertices())
+			{
+				if (ret->bagContent(v) == neighbors.at(i)) {
+					isInDecomp = true;
+					break;
+				}
+			}
+			if (!isInDecomp) {
+				w = ret->addChild(index, neighbors.at(i), graphWithoutSeparator.hyperedgesAtPositions(neighbors.at(i)));
+			}
+			else
+				w = index;
 		}		
 		if (separator.size()>0 && ( criteriaType_ == 3 || (counter + 1 < numberOfSteps_ && criteriaType_ == 1) || (components.at(i).size()> sizeLimit_ && criteriaType_ == 2))
 		   && (components.at(i).size()> neighbors.at(i).size() || (components.at(i).size() == neighbors.at(i).size() && components.at(i) != neighbors.at(i)))) 
@@ -475,13 +504,17 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 				if (!(std::find(components.at(i).begin(), components.at(i).end(), v) != components.at(i).end()))
 					g.removeVertex(v);
 			}
-			std::cout << "COUNTER: " << counter << std::endl;
-			computeMutableDecomposition(ret, g, preprocessedGraph, index, ++counter);
+			computeMutableDecomposition(ret, g, preprocessedGraph, w, ++counter, neighbors.at(i));
 		}
 		else
 		{
-			if (components.at(i) != neighbors.at(i) && components.at(i).size() >= neighbors.at(i).size()) 
+			std::sort(components.at(i).begin(), components.at(i).end());
+			std::sort(neighbors.at(i).begin(), neighbors.at(i).end());
+			if (components.at(i) != neighbors.at(i) && components.at(i).size() >= neighbors.at(i).size()) {
+				std::sort(components.at(i).begin(), components.at(i).end());
 				ret->addChild(index, components.at(i), graph.hyperedgesAtPositions(components.at(i)));
+			}
+				
 		}
 	}
 }
@@ -511,7 +544,8 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 		}
 	}
 	else
-	{		
+	{	
+		std::sort(separators.begin(), separators.end());
 		htd::vertex_t root = ret->insertRoot(separators, graph.hyperedgesAtPositions(separators));
 		index = root;
 	}
@@ -525,7 +559,8 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 		managementInstance_->connectedComponentAlgorithmFactory().createInstance()->determineComponents(graphWithoutSeparator, components);
 
 		for (std::vector<htd::vertex_t> comp : components)
-		{			
+		{	
+			std::sort(comp.begin(), comp.end());
 			MultiHypergraph g = *graph.cloneMultiHypergraph();
 			for (vertex_t v : graph.vertices())
 			{
@@ -535,7 +570,7 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 						g.removeVertex(v);
 				}					
 			}
-			if (criteriaType_ == 2 && comp.size() <= sizeLimit_)
+			if ((criteriaType_ == 2 && comp.size() <= sizeLimit_) || comp.size()<=2)
 			{
 				if(g.vertexVector() != ret->bagContent(index))
 					ret->addChild(index, g.vertexVector(), g.hyperedgesAtPositions(g.vertexVector()));
@@ -549,8 +584,10 @@ void htd::TreeDecompositionViaSeparatorAlgorithm::Implementation::computeMutable
 	else
 	{
 		MultiHypergraph g = *graph.cloneMultiHypergraph();
-		if (g.vertexVector() != ret->bagContent(index))
-			ret->addChild(index, g.vertexVector() , g.hyperedgesAtPositions(g.vertexVector()));
+		if (g.vertexVector() != ret->bagContent(index)) {			
+			ret->addChild(index, g.vertexVector(), g.hyperedgesAtPositions(g.vertexVector()));
+		}
+			
 	}	
 }
 
