@@ -694,7 +694,7 @@ int main(int argc, const char * const * const argv)
 				delete separatorAlgorithm;
 			}
 
-			std::exit(1);
+			std::exit(0);
 		}
 
         if (std::string(strategyChoice.value()) == "min-separator")
