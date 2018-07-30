@@ -684,6 +684,8 @@ int main(int argc, const char * const * const argv)
 						{
 							std::cout << *it << " ";
 						}
+
+						std::cout << std::endl;
 					}
 				}
 
