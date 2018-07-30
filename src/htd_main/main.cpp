@@ -668,7 +668,11 @@ int main(int argc, const char * const * const argv)
 		
 				if (instanceOption.used())
 				{
+#ifndef HTD_USE_VISUAL_STUDIO_COMPATIBILITY_MODE
+					separator = separatorAlgorithm->computeSeparator(*importer.import(instanceOption.value())->clone());
+#elif
 					separator = separatorAlgorithm->computeSeparator(*importer.import(instanceOption.value())->cloneMultiGraph());
+#endif
 				}
 				else
 				{
