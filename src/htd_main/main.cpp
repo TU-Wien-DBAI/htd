@@ -100,6 +100,7 @@ htd_cli::OptionManager * createOptionManager(void)
         strategyChoice->addPossibility("max-cardinality-enhanced", "Enhanced maximum cardinality search ordering algorithm (MCS-M)");
         strategyChoice->addPossibility("challenge", "Use a combination of different decomposition strategies.");
 		strategyChoice->addPossibility("max-degree", "Highest degree separator algorithm");
+		strategyChoice->addPossibility("flow", "Standard algorithm based on network flows");
 		strategyChoice->addPossibility("lgb", "Line Graph Bisection algorithm");
         strategyChoice->setDefaultValue("min-fill");
 
@@ -305,11 +306,11 @@ bool handleOptions(int argc, const char * const * const argv, htd_cli::OptionMan
         {
             manager->orderingAlgorithmFactory().setConstructionTemplate(new htd::RandomOrderingAlgorithm(manager));
         }
-		else if (value == "max-degree" || value == "lgb")
+		else if (value == "max-degree" || value == "lgb" || value == "flow")
 		{
 			if (decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) != "separator")
 			{
-				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"max-degree\" and \"lgb\" may only be used when type is set to \"separator\"";
+				std::cerr << "INVALID DECOMPOSITION STRATEGY: Strategy \"max-degree\", \"flow\", and \"lgb\" may only be used when type is set to \"separator\"";
 
 				ret = false;
 			}
@@ -646,6 +647,10 @@ int main(int argc, const char * const * const argv)
 			else if (std::string(strategyChoice.value()) == "lgb")
 			{
 				separatorAlgorithm = new htd::LgbSeparatorAlgorithm(libraryInstance);
+			}
+			else if (std::string(strategyChoice.value()) == "flow")
+			{
+				separatorAlgorithm = new htd::MinimumSeparatorAlgorithm(libraryInstance);
 			}
 			else
 			{
