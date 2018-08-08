@@ -69,7 +69,7 @@ if(NOT DEFINED BUILD_TESTING)
     set(BUILD_TESTING OFF)
 endif()
 
-if (NOT DEFINED BUILD_EXTERNAL_SOLVERS)
+if (UNIX AND NOT DEFINED BUILD_EXTERNAL_SOLVERS)
     ExternalProject_Add(mrprajesh
             GIT_REPOSITORY https://github.com/mrprajesh/pacechallenge
             GIT_TAG 6c29c143d72856f649de99846e91de185f78c15f
@@ -96,31 +96,34 @@ if (NOT DEFINED BUILD_EXTERNAL_SOLVERS)
     get_filename_component(BZTreewidth_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/BZTreewidth" ABSOLUTE)
     add_definitions(-DBZTREEWIDTH_PATH="${BZTreewidth_path}")
 
-    ExternalProject_Add(Jdrasil
-            GIT_REPOSITORY https://github.com/maxbannach/Jdrasil
-            GIT_TAG fa7855e4c9f33163606a0677485a9e51d26d7b0a
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND make -s
-            INSTALL_COMMAND ""
-            TEST_COMMAND ""
-            BUILD_IN_SOURCE true
-            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil
-            )
-    get_filename_component(Jdrasil_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil" ABSOLUTE)
-    add_definitions(-DJDRASIL_PATH="${Jdrasil_path}")
+    find_package(Java)
+    if(Java_FOUND)
+        ExternalProject_Add(Jdrasil
+                GIT_REPOSITORY https://github.com/maxbannach/Jdrasil
+                GIT_TAG fa7855e4c9f33163606a0677485a9e51d26d7b0a
+                CONFIGURE_COMMAND ""
+                BUILD_COMMAND make -s
+                INSTALL_COMMAND ""
+                TEST_COMMAND ""
+                BUILD_IN_SOURCE true
+                SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil
+                )
+        get_filename_component(Jdrasil_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/Jdrasil" ABSOLUTE)
+        add_definitions(-DJDRASIL_PATH="${Jdrasil_path}")
 
-    ExternalProject_Add(mfjones
-            GIT_REPOSITORY https://github.com/mfjones/pace2016
-            GIT_TAG 2b7f289e4d182799803a014d0ee1d76a4de70c1f
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND make -s
-            INSTALL_COMMAND ""
-            TEST_COMMAND ""
-            BUILD_IN_SOURCE true
-            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones
-            )
-    get_filename_component(mfjones_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones" ABSOLUTE)
-    add_definitions(-DMFJONES_PATH="${mfjones_path}")
+        ExternalProject_Add(mfjones
+                GIT_REPOSITORY https://github.com/mfjones/pace2016
+                GIT_TAG 2b7f289e4d182799803a014d0ee1d76a4de70c1f
+                CONFIGURE_COMMAND ""
+                BUILD_COMMAND make -s
+                INSTALL_COMMAND ""
+                TEST_COMMAND ""
+                BUILD_IN_SOURCE true
+                SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones
+                )
+        get_filename_component(mfjones_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/mfjones" ABSOLUTE)
+        add_definitions(-DMFJONES_PATH="${mfjones_path}")
+    endif ()
 
     ExternalProject_Add(minfill_mrs
             GIT_REPOSITORY https://github.com/td-mrs/minfill_mrs
@@ -134,8 +137,46 @@ if (NOT DEFINED BUILD_EXTERNAL_SOLVERS)
             )
     get_filename_component(minfill_mrs_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/minfill_mrs" ABSOLUTE)
     add_definitions(-DMINFILL_MRS_PATH="${minfill_mrs_path}")
-else()
 
+    ExternalProject_Add(elitheeli
+            GIT_REPOSITORY https://github.com/elitheeli/2016-pace-challenge
+            GIT_TAG 2f4acb30b5c48608859ff27b5f4e217ee8346ca5
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/elitheeli
+            )
+    get_filename_component(elitheeli_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/elitheeli" ABSOLUTE)
+    add_definitions(-DELITHEELI_PATH="${elitheeli_path}")
+
+    ExternalProject_Add(minfillbg_mrs
+            GIT_REPOSITORY https://github.com/td-mrs/minfillbg_mrs
+            GIT_TAG 7aa09099ad4e9e51e47317c77f39664d07d921ed
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/minfillbg_mrs
+            )
+    get_filename_component(minfillbg_mrs_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/minfillbg_mrs" ABSOLUTE)
+    add_definitions(-DMINFILLBG_MRS_PATH="${minfillbg_mrs_path}")
+
+    ExternalProject_Add(CVO2
+            GIT_REPOSITORY https://github.com/willmlam/CVO2
+            GIT_TAG e247e64c9d75b8ef1372954c38d37a4ad67f34ac
+            CONFIGURE_COMMAND cmake .
+            BUILD_COMMAND make -s
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            BUILD_IN_SOURCE true
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/solvers/CVO2
+            )
+    get_filename_component(CVO2_path "${CMAKE_CURRENT_BINARY_DIR}/solvers/CVO2" ABSOLUTE)
+    add_definitions(-DCVO2_PATH="${CVO2_path}")
+else ()
     add_definitions(-DBUILD_EXTERNAL_SOLVERS)
 endif ()
 

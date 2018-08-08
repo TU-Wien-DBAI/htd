@@ -148,23 +148,32 @@ htd_cli::OptionManager * createOptionManager(void)
 #ifndef BUILD_EXTERNAL_SOLVERS
         htd_cli::Choice * solverChoice = new htd_cli::Choice("solver", "use an external <solver>", "solver");
 
-        solverChoice->addPossibility("all", "Use all available solver.");
+        solverChoice->addPossibility("all", "Use a combination of the fastest solvers.");
         solverChoice->addPossibility("htd", "This solver.");
 
 #ifdef MINFILL_MRS_PATH
-        solverChoice->addPossibility("minfill_mrs", "");
+        solverChoice->addPossibility("minfill_mrs", "https://github.com/td-mrs/minfill_mrs");
 #endif
 #ifdef BZTREEWIDTH_PATH
-        solverChoice->addPossibility("BZTreewidth", "");
+        solverChoice->addPossibility("BZTreewidth", "https://github.com/TomvdZanden/BZTreewidth");
 #endif
 #ifdef JDRASIL_PATH
-        solverChoice->addPossibility("Jdrasil", "");
+        solverChoice->addPossibility("Jdrasil", "https://github.com/maxbannach/Jdrasil");
 #endif
 #ifdef MFJONES_PATH
-        solverChoice->addPossibility("mfjones", "");
+        solverChoice->addPossibility("mfjones", "https://github.com/mfjones/pace2016");
 #endif
 #ifdef MRPRAJESH_PATH
-        solverChoice->addPossibility("mrprajesh", "");
+        solverChoice->addPossibility("mrprajesh", "https://github.com/mrprajesh/pacechallenge");
+#endif
+#ifdef ELITHEELI_PATH
+        solverChoice->addPossibility("elitheeli", "https://github.com/elitheeli/2016-pace-challenge");
+#endif
+#ifdef MINFILLBG_MRS_PATH
+        solverChoice->addPossibility("minfillbg_mrs", "https://github.com/td-mrs/minfillbg_mrs");
+#endif
+#ifdef CVO2_PATH
+        solverChoice->addPossibility("CVO2", "https://github.com/willmlam/CVO2");
 #endif
 
         solverChoice->setDefaultValue("htd");
@@ -770,7 +779,7 @@ int main(int argc, const char * const * const argv)
                     if (!strcmp(solverChoice.value(), "mrprajesh"))
                     {
                         std::string path(MRPRAJESH_PATH);
-                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         algo->setDirectory(path);
                         decompAlgorithm = algo;
                     }
@@ -779,7 +788,7 @@ int main(int argc, const char * const * const argv)
                     if (!strcmp(solverChoice.value(), "BZTreewidth"))
                     {
                         std::string path(BZTREEWIDTH_PATH);
-                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/bin/BZTreewidth-DFS.exe", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/bin/BZTreewidth-DFS.exe" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         algo->setDirectory(path);
                         decompAlgorithm = algo;
                     }
@@ -788,7 +797,7 @@ int main(int argc, const char * const * const argv)
                     if (!strcmp(solverChoice.value(), "Jdrasil"))
                     {
                         std::string path(JDRASIL_PATH);
-                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         algo->setDirectory(path);
                         decompAlgorithm = algo;
                     }
@@ -797,7 +806,7 @@ int main(int argc, const char * const * const argv)
                     if (!strcmp(solverChoice.value(), "mfjones"))
                     {
                         std::string path(MFJONES_PATH);
-                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         algo->setDirectory(path);
                         decompAlgorithm = algo;
                     }
@@ -806,7 +815,34 @@ int main(int argc, const char * const * const argv)
                     if (!strcmp(solverChoice.value(), "minfill_mrs"))
                     {
                         std::string path(MINFILL_MRS_PATH);
-                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/minfill_mrs", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/minfill_mrs" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef ELITHEELI_PATH
+                    if (!strcmp(solverChoice.value(), "elitheeli"))
+                    {
+                        std::string path(ELITHEELI_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef MINFILLBG_MRS_PATH
+                    if (!strcmp(solverChoice.value(), "minfillbg_mrs"))
+                    {
+                        std::string path(MINFILLBG_MRS_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        algo->setDirectory(path);
+                        decompAlgorithm = algo;
+                    }
+#endif
+#ifdef CVO2_PATH
+                    if (!strcmp(solverChoice.value(), "CVO2"))
+                    {
+                        std::string path(CVO2_PATH);
+                        htd::ExternalPipeTreeDecompositionAlgorithm * algo = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, path + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         algo->setDirectory(path);
                         decompAlgorithm = algo;
                     }
@@ -834,36 +870,25 @@ int main(int argc, const char * const * const argv)
                         htdAlgorithm->setIterationCount(10);
                         algo->addNonDeterministicAlgorithm(htdAlgorithm);
 #ifdef MINFILL_MRS_PATH
-                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MINFILL_MRS_PATH) + "/minfill_mrs", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MINFILL_MRS_PATH) + "/minfill_mrs" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         externalAlgorithms->setDirectory(MINFILL_MRS_PATH);
                         algo->addNonDeterministicAlgorithm(externalAlgorithms);
 #endif
-#ifdef BZTREEWIDTH_PATH
-                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(BZTREEWIDTH_PATH) + "/bin/BZTreewidth-DFS.exe", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
-                        externalAlgorithms->setDirectory(BZTREEWIDTH_PATH);
-                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
-#endif
-#ifdef JDRASIL_PATH
-                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(JDRASIL_PATH) + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
-                        externalAlgorithms->setDirectory(JDRASIL_PATH);
-                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
-#endif
 #ifdef MFJONES_PATH
-                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MFJONES_PATH) + "/tw-heuristic", timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MFJONES_PATH) + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
                         externalAlgorithms->setDirectory(MFJONES_PATH);
+                        algo->addNonDeterministicAlgorithm(externalAlgorithms);
+#endif
+#ifdef MINFILLBG_MRS_PATH
+                        externalAlgorithms = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, std::string(MINFILLBG_MRS_PATH) + "/tw-heuristic" + (seedOption.used() ? " -s " + std::string(seedOption.value()) : ""), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                        externalAlgorithms->setDirectory(MINFILLBG_MRS_PATH);
                         algo->addNonDeterministicAlgorithm(externalAlgorithms);
 #endif
 
                         decompAlgorithm = algo;
                     }
                 }
-                else if (externalOption.used())
-#else
-                    if (externalOption.used())
 #endif
-                {
-                    decompAlgorithm = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, externalOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
-                }
                 else if (pathOption.used())
                 {
                     decompAlgorithm = (new htd::FileTreeDecompositionAlgorithm(libraryInstance, pathOption.value()));
