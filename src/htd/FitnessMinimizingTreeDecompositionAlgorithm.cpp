@@ -38,7 +38,7 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
      *  @param[in] manager                      The management instance to which the current object instance belongs.
       * @param[in] fitnessFunction              The fitness function to minimize.
       */
-    Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), fitnessFunction_(fitnessFunction)
+    Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, unsigned int numIterations) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), fitnessFunction_(fitnessFunction), numIterations_(numIterations)
     {
     }
 
@@ -50,7 +50,7 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
       * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
       * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
       */
-    Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), deterministicAlgorithms_(deterministicAlgorithms), nonDeterministicAlgorithms_(nonDeterministicAlgorithms), fitnessFunction_(fitnessFunction)
+    Implementation(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms, unsigned int numIterations) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), deterministicAlgorithms_(deterministicAlgorithms), nonDeterministicAlgorithms_(nonDeterministicAlgorithms), fitnessFunction_(fitnessFunction), numIterations_(numIterations)
     {
     }
 
@@ -59,7 +59,7 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
      *
      *  @param[in] original The original implementation details structure.
      */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), deterministicAlgorithms_(original.deterministicAlgorithms_), nonDeterministicAlgorithms_(original.nonDeterministicAlgorithms_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), deterministicAlgorithms_(original.deterministicAlgorithms_), nonDeterministicAlgorithms_(original.nonDeterministicAlgorithms_), numIterations_(original.numIterations_)
     {
         fitnessFunction_ = original.fitnessFunction_;
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
@@ -130,6 +130,11 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
     ITreeDecompositionFitnessFunction * fitnessFunction_;
 
     /**
+     *
+     */
+    std::size_t numIterations_;
+
+    /**
      *  Compute a new mutable tree decompostion of the given graph.
      *
      *  @param[in] graph                The graph which shall be decomposed.
@@ -142,12 +147,12 @@ struct htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation
     htd::IMutableTreeDecomposition * computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const;
 };
 
-htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms) : implementation_(new Implementation(manager, fitnessFunction, deterministicAlgorithms, nonDeterministicAlgorithms))
+htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms, unsigned int numIterations) : implementation_(new Implementation(manager, fitnessFunction, deterministicAlgorithms, nonDeterministicAlgorithms, numIterations))
 {
 
 }
 
-htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms) : implementation_(new Implementation(manager, fitnessFunction, deterministicAlgorithms, nonDeterministicAlgorithms))
+htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms, unsigned int numIterations) : implementation_(new Implementation(manager, fitnessFunction, deterministicAlgorithms, nonDeterministicAlgorithms, numIterations))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -162,7 +167,7 @@ htd::FitnessMinimizingTreeDecompositionAlgorithm::~FitnessMinimizingTreeDecompos
 
 }
 
-htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, htd::ITreeDecompositionFitnessFunction * fitnessFunction) : implementation_(new Implementation(manager, fitnessFunction))
+htd::FitnessMinimizingTreeDecompositionAlgorithm::FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, htd::ITreeDecompositionFitnessFunction * fitnessFunction, unsigned int numIterations) : implementation_(new Implementation(manager, fitnessFunction, numIterations))
 {
 
 }
@@ -174,7 +179,7 @@ htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::comp
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, 1);
+    return computeDecomposition(graph, manipulationOperations, (std::size_t)-1, implementation_->numIterations_);
 }
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -203,7 +208,7 @@ htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::comp
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations) const
 {
-    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, 1);
+    return computeDecomposition(graph, preprocessedGraph, manipulationOperations, (std::size_t)-1, implementation_->numIterations_);
 }
 
 htd::ITreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::computeDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph & preprocessedGraph, std::size_t maxBagSize, std::size_t maxIterationCount) const
@@ -416,6 +421,11 @@ void htd::FitnessMinimizingTreeDecompositionAlgorithm::addDeterministicAlgorithm
 void htd::FitnessMinimizingTreeDecompositionAlgorithm::addNonDeterministicAlgorithm(htd::ITreeDecompositionAlgorithm * algo)
 {
     implementation_->nonDeterministicAlgorithms_.push_back(algo);
+}
+
+void htd::FitnessMinimizingTreeDecompositionAlgorithm::setIterationCount(std::size_t numIterations)
+{
+    implementation_->numIterations_ = numIterations;
 }
 
 htd::IMutableTreeDecomposition * htd::FitnessMinimizingTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize, std::size_t maxIterationCount) const
