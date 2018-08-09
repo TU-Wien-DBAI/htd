@@ -188,6 +188,14 @@ htd_cli::OptionManager * createOptionManager(void)
         htd_cli::SingleValueOption * patienceOption = new htd_cli::SingleValueOption("patience", "Terminate the algorithm if more than <amount> iterations did not lead to an improvement (-1 = infinite). (Default: -1)", "amount");
 
         manager->registerOption(patienceOption, "Optimization Options");
+
+        htd_cli::SingleValueOption * graphFileOption = new htd_cli::SingleValueOption("gPath", "tmp File for graph <path>.", "gPath");
+
+        manager->registerOption(graphFileOption, "Input-Specific Options");
+
+        htd_cli::SingleValueOption * decompFileOption = new htd_cli::SingleValueOption("dPath", "tmp file for decomp <path>.", "dPath");
+
+        manager->registerOption(decompFileOption, "Input-Specific Options");
     }
     catch (const std::runtime_error & exception)
     {
@@ -677,17 +685,23 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::SingleValueOption & pathOption = optionManager->accessSingleValueOption("decomp");
 
-        const htd_cli::SingleValueOption & externalOption = optionManager->accessSingleValueOption("command");
-
         const htd_cli::SingleValueOption & timeoutCOption = optionManager->accessSingleValueOption("timeoutC");
 
         const htd_cli::Option & printProgressOption = optionManager->accessOption("print-progress");
+
+        const htd_cli::SingleValueOption & seedOption = optionManager->accessSingleValueOption("seed");
 
         const std::string & outputFormat = outputFormatChoice.value();
 
         bool hypertreeDecompositionRequested = decompositionTypeChoice.used() && std::string(decompositionTypeChoice.value()) == "hypertree";
 
         const htd_cli::Choice & normalizeChoice = optionManager->accessChoice("normalize");
+
+        const htd_cli::SingleValueOption & externalSolverOption = optionManager->accessSingleValueOption("command");
+
+        const htd_cli::SingleValueOption & graphFileOption = optionManager->accessSingleValueOption("gPath");
+
+        const htd_cli::SingleValueOption & decompFileOption = optionManager->accessSingleValueOption("dPath");
 
         htd::ITreeDecompositionAlgorithm * decompAlgorithm;
 
@@ -772,8 +786,16 @@ int main(int argc, const char * const * const argv)
             {
                 std::size_t optimalMaximumBagSize = (std::size_t)-1;
 
+                if (externalSolverOption.used() && graphFileOption.used() && decompFileOption.used())
+                {
+                    decompAlgorithm = (new htd::ExternalTmpFileTreeDecompositionAlgorithm(libraryInstance, externalSolverOption.value(), graphFileOption.value(), decompFileOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                }
+                else if (externalSolverOption.used())
+                {
+                    decompAlgorithm = (new htd::ExternalPipeTreeDecompositionAlgorithm(libraryInstance, externalSolverOption.value(), timeoutCOption.used() ? std::stol(timeoutCOption.value()) : 0));
+                }
 #ifndef BUILD_EXTERNAL_SOLVERS
-                if (solverChoice.used() && strcmp(solverChoice.value(), "htd") != 0)
+                else if (solverChoice.used() && strcmp(solverChoice.value(), "htd") != 0)
                 {
 #ifdef MRPRAJESH_PATH
                     if (!strcmp(solverChoice.value(), "mrprajesh"))
