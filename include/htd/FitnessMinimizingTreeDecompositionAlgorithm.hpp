@@ -23,7 +23,7 @@ namespace htd
              *  @param[in] manager                      The management instance to which the new algorithm belongs.
               * @param[in] fitnessFunction              The fitness function to minimize.
              */
-            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction);
+            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, unsigned int iterations=1);
 
             /**
              * Constructor for a tree decomposition algorithm which calls different algorithms to minimize a fitness function.
@@ -33,7 +33,7 @@ namespace htd
               * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
               * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
              */
-            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms);
+            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms, unsigned int iterations=1);
 
             /**
              * Constructor for a tree decomposition algorithm which calls different algorithms to minimize a fitness function.
@@ -48,7 +48,7 @@ namespace htd
               * @param[in] deterministicAlgorithms      The deterministic solving algorithms.
               * @param[in] nonDeterministicAlgorithms   The non deterministic solving algorithms.
              */
-            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms);
+            HTD_API FitnessMinimizingTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, ITreeDecompositionFitnessFunction * fitnessFunction, std::vector<ITreeDecompositionAlgorithm *> deterministicAlgorithms, std::vector<ITreeDecompositionAlgorithm *> nonDeterministicAlgorithms, unsigned int iterations=1);
 
             /**
              *  Copy constructor for a htd::FitnessMinimizingTreeDecompositionAlgorithm object.
@@ -193,6 +193,8 @@ namespace htd
             HTD_API void addDeterministicAlgorithm(ITreeDecompositionAlgorithm *);
 
             HTD_API void addNonDeterministicAlgorithm(ITreeDecompositionAlgorithm *);
+
+            HTD_API void setIterationCount(std::size_t numIterations);
 
         protected:
             /**

@@ -438,29 +438,42 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::convert
 {
     std::unordered_map<htd::vertex_t, std::size_t> indices;
 
-    std::string graphString = "p tw " + std::to_string(graph.vertexCount()) + " " + std::to_string(graph.edgeCount()) + "\n";
+    std::size_t maxNodeId = 0;
+    for (std::size_t i = 0; i < graph.vertexCount(); i++)
+    {
+        maxNodeId = maxNodeId > graph.vertexAtPosition(i) ? maxNodeId : graph.vertexAtPosition(i);
+    }
+
+    std::string graphString;
+
+    std::size_t edgeNum = 0;
 
     if (graph.vertexCount() > 0)
     {
         std::stringstream tmpStream;
+        std::unordered_set<std::string> edgeStrings;
 
-        const htd::ConstCollection<htd::Hyperedge> & hyperedgeCollection = graph.hyperedges();
-
-        std::size_t edgeCount = graph.edgeCount();
-
-        auto it = hyperedgeCollection.begin();
-
-        for (htd::index_t index = 0; index < edgeCount; ++index)
+        for (const htd::Hyperedge & edge : graph.hyperedges())
         {
-            htd::vertex_t vertex1 = (*it)[0];
-            htd::vertex_t vertex2 = (*it)[1];
-
-            graphString += std::to_string(vertex1) + " " + std::to_string(vertex2) + "\n";
-
-            ++it;
+            if (edge.size() > 1)
+            {
+                for (std::size_t a = 0; a < edge.size(); a++)
+                {
+                    for (std::size_t b = a + 1; b < edge.size(); b++)
+                    {
+                        edgeStrings.insert(std::to_string(edge[a]) + " " + std::to_string(edge[b]) + "\n");
+                    }
+                }
+            }
+        }
+        for (std::string edge:edgeStrings)
+        {
+            edgeNum++;
+            graphString += edge;
         }
     }
 
+    graphString = "p tw " + std::to_string(maxNodeId) + " " + std::to_string(edgeNum) + "\n" + graphString;
     return graphString;
 }
 

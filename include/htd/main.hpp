@@ -250,5 +250,6 @@
 #include <htd/WidthMinimizingTreeDecompositionAlgorithm.hpp>
 #include <htd/WidthReductionOperation.hpp>
 #include <htd/ExternalPipeTreeDecompositionAlgorithm.hpp>
+#include <htd/ExternalTmpFileTreeDecompositionAlgorithm.hpp>
 
 #endif /* HTD_HTD_MAIN_HPP */

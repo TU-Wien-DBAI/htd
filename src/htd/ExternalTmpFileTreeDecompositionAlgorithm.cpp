@@ -164,12 +164,12 @@ std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::getDirectory()
     return implementation_->getDirectory();
 }
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
 
 }
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -469,29 +469,45 @@ std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation::conv
 {
     std::unordered_map<htd::vertex_t, std::size_t> indices;
 
-    std::string graphString = "p tw " + std::to_string(graph.vertexCount()) + " " + std::to_string(graph.edgeCount()) + "\n";
+    std::size_t maxNodeId = 0;
+    for (std::size_t i = 0; i < graph.vertexCount(); i++)
+    {
+        maxNodeId = maxNodeId > graph.vertexAtPosition(i) ? maxNodeId : graph.vertexAtPosition(i);
+    }
+
+    std::string graphString;
+
+    std::size_t edgeNum = 0;
 
     if (graph.vertexCount() > 0)
     {
         std::stringstream tmpStream;
+        std::unordered_set<std::string> edgeStrings;
 
-        const htd::ConstCollection<htd::Hyperedge> & hyperedgeCollection = graph.hyperedges();
-
-        std::size_t edgeCount = graph.edgeCount();
-
-        auto it = hyperedgeCollection.begin();
-
-        for (htd::index_t index = 0; index < edgeCount; ++index)
+        for (const htd::Hyperedge & edge : graph.hyperedges())
         {
-            htd::vertex_t vertex1 = (*it)[0];
-            htd::vertex_t vertex2 = (*it)[1];
-
-            graphString += std::to_string(vertex1) + " " + std::to_string(vertex2) + "\n";
-
-            ++it;
+            if (edge.size() > 1)
+            {
+                for (std::size_t a = 0; a < edge.size(); a++)
+                {
+                    for (std::size_t b = 0; b < edge.size(); b++)
+                    {
+                        if (a <= b)
+                        {
+                            edgeStrings.insert(std::to_string(edge[a]) + " " + std::to_string(edge[b]) + "\n");
+                        }
+                    }
+                }
+            }
+        }
+        for (std::string edge:edgeStrings)
+        {
+            edgeNum++;
+            graphString += edge;
         }
     }
 
+    graphString = "p tw " + std::to_string(maxNodeId) + " " + std::to_string(edgeNum) + "\n" + graphString;
     return graphString;
 }
 
@@ -519,9 +535,9 @@ htd::IMutableTreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm:
 
     decompFile.read(&decompString[0], size);
 
-    std::remove(decompFilePath_.c_str());
+    //std::remove(decompFilePath_.c_str());
 
-    std::remove(graphFilePath_.c_str());
+    //std::remove(graphFilePath_.c_str());
 
     FileTreeDecompositionAlgorithm algorithm(managementInstance_, decompString);
 
@@ -542,7 +558,7 @@ htd::IMutableTreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm:
 
 #include <windows.h>
 #include <tchar.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <strsafe.h>
 #pragma comment(lib, "User32.lib")
 

@@ -26,7 +26,7 @@ namespace htd
              *  @param[in] graphFile        The path to the graph file.
              *  @param[in] decompFile       The path to the decomposition file.
              */
-            HTD_API ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile);
+            HTD_API ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout = 0);
 
             /**
              *  Constructor for a tree decomposition algorithm which calls an external decomposer.
@@ -41,7 +41,7 @@ namespace htd
              *  @param[in] graphFile                The path to the graph file.
              *  @param[in] decompFile               The path to the decomposition file.
              */
-            HTD_API ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile);
+            HTD_API ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout=0);
 
             /**
              *  Copy constructor for a htd::ExternalTmpFileTreeDecompositionAlgorithm object.
