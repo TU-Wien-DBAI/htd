@@ -40,7 +40,7 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     *  @param[in] graphFile        The path to the graph file.
     *  @param[in] decompFile       The path to the decomposition file.
     */
-    Implementation(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile), cmd_(std::move(cmd))
+    Implementation(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string graphFile, std::string decompFile, std::string inputString) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), timeout_(timeout), graphFilePath_(graphFile), decompFilePath_(decompFile), cmd_(std::move(cmd)), inputString_(inputString)
     {
     }
 
@@ -49,7 +49,7 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     *
     *  @param[in] original The original implementation details structure.
     */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_), dir_(original.dir_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), timeout_(original.timeout_), graphFilePath_(original.graphFilePath_), decompFilePath_(original.decompFilePath_), cmd_(original.cmd_), dir_(original.dir_), inputString_(original.inputString_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -129,6 +129,11 @@ struct htd::ExternalTmpFileTreeDecompositionAlgorithm::Implementation
     std::string dir_;
 
     /**
+     * A custom string to send the external solver instead of the graph.
+     */
+    std::string inputString_;
+
+    /**
     *  Compute a new mutable tree decompostion of the given graph.
     *
     *  @param[in] graph                The graph which shall be decomposed.
@@ -164,12 +169,12 @@ std::string htd::ExternalTmpFileTreeDecompositionAlgorithm::getDirectory()
     return implementation_->getDirectory();
 }
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout, std::string inputString) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile, inputString))
 {
 
 }
 
-htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile))
+htd::ExternalTmpFileTreeDecompositionAlgorithm::ExternalTmpFileTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, std::string graphFile, std::string decompFile, unsigned int timeout, std::string inputString) : implementation_(new Implementation(manager, cmd, timeout, graphFile, decompFile, inputString))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -516,7 +521,7 @@ htd::IMutableTreeDecomposition * htd::ExternalTmpFileTreeDecompositionAlgorithm:
     //write graph to file
     std::ofstream graphFile(graphFilePath_);
 
-    graphFile << convert(graph);
+    graphFile << !inputString_.empty() ? inputString_ : convert(graph);
 
     graphFile.close();
 

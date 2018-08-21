@@ -39,7 +39,7 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     *  @param[in] cmd              The command used to call the external solver.
     *  @param[in] timeout          The timeout for the external solver in milliseconds.
     */
-    Implementation(const htd::LibraryInstance * const manager, const std::string & cmd, unsigned int timeout) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), cmd_(cmd), timeout_(timeout)
+    Implementation(const htd::LibraryInstance * const manager, const std::string & cmd, unsigned int timeout, std::string inputString) : managementInstance_(manager), labelingFunctions_(), postProcessingOperations_(), cmd_(cmd), timeout_(timeout), inputString_(inputString)
     {
     }
 
@@ -48,7 +48,7 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     *
     *  @param[in] original The original implementation details structure.
     */
-    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_), dir_(original.dir_)
+    Implementation(const Implementation & original) : managementInstance_(original.managementInstance_), labelingFunctions_(), postProcessingOperations_(), cmd_(original.cmd_), timeout_(original.timeout_), dir_(original.dir_), inputString_(original.inputString_)
     {
         for (htd::ILabelingFunction * labelingFunction : original.labelingFunctions_)
         {
@@ -118,6 +118,11 @@ struct htd::ExternalPipeTreeDecompositionAlgorithm::Implementation
     std::string dir_;
 
     /**
+     *
+     */
+    std::string inputString_;
+
+    /**
     *  Compute a new mutable tree decompostion of the given graph.
     *
     *  @param[in] graph                The graph which shall be decomposed.
@@ -153,12 +158,12 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::getDirectory()
     return implementation_->getDirectory();
 }
 
-htd::ExternalPipeTreeDecompositionAlgorithm::ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout))
+htd::ExternalPipeTreeDecompositionAlgorithm::ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, std::string cmd, unsigned int timeout, std::string inputString) : implementation_(new Implementation(manager, cmd, timeout, inputString))
 {
 
 }
 
-htd::ExternalPipeTreeDecompositionAlgorithm::ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout) : implementation_(new Implementation(manager, cmd, timeout))
+htd::ExternalPipeTreeDecompositionAlgorithm::ExternalPipeTreeDecompositionAlgorithm(const htd::LibraryInstance * const manager, const std::vector<htd::IDecompositionManipulationOperation *> & manipulationOperations, std::string cmd, unsigned int timeout, std::string inputString) : implementation_(new Implementation(manager, cmd, timeout, inputString))
 {
     setManipulationOperations(manipulationOperations);
 }
@@ -479,6 +484,14 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::convert
 
 htd::IMutableTreeDecomposition * htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::computeMutableDecomposition(const htd::IMultiHypergraph & graph, const htd::IPreprocessedGraph &, std::size_t maxBagSize) const
 {
+    std::ofstream graphFile("/home/markus/dynqbf/dynqbf_minor/graph.gr");
+
+    graphFile << convert(graph);
+
+    graphFile.flush();
+
+    graphFile.close();
+
     std::string decompString = getDecomp(graph);
 
     // call File Tree Decomposition Algorithm
@@ -616,7 +629,8 @@ std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDeco
 
 std::string htd::ExternalPipeTreeDecompositionAlgorithm::Implementation::getDecomp(const htd::IMultiHypergraph & graph) const
 {
-    std::string graphString = convert(graph);
+
+    std::string graphString = !inputString_.empty() ? inputString_ : convert(graph);
 
     std::string decompString;
 
