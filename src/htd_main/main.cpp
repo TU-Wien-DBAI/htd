@@ -93,6 +93,10 @@ htd_cli::OptionManager * createOptionManager(void)
 
         manager->registerOption(normalizeOption, "Output-Specific Options");
 
+       htd_cli::Option * limitChildCountOption = new htd_cli::SingleValueOption("child-limit", "Set child count limit for join nodes to <child-limit>.", "child-limit");
+
+       manager->registerOption(limitChildCountOption, "Output-Specific Options");
+
         htd_cli::Choice * strategyChoice = new htd_cli::Choice("strategy", "Set the decomposition strategy which shall be used to <algorithm>.", "algorithm");
 
         strategyChoice->addPossibility("random", "Use a random vertex ordering.");
@@ -630,6 +634,8 @@ int main(int argc, const char * const * const argv)
 
         const htd_cli::Choice & normalizeChoice = optionManager->accessChoice("normalize");
 
+       const htd_cli::SingleValueOption & childLimitOption = optionManager->accessSingleValueOption("child-limit");
+
         htd::ITreeDecompositionAlgorithm * decompAlgorithm;
 
         if (std::string(strategyChoice.value()) == "min-separator")
@@ -820,6 +826,12 @@ int main(int argc, const char * const * const argv)
                 }
 
                 if (normalizeChoice.used()) decompAlgorithm->addManipulationOperation(new htd::NormalizationOperation(libraryInstance, true, true, true, true));
+
+               if (childLimitOption.used())
+               {
+                   std::size_t limit = std::stoul(childLimitOption.value(), nullptr, 10);
+                   decompAlgorithm->addManipulationOperation(new htd::LimitChildCountOperation(libraryInstance, limit));
+               }
 
                 libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(decompAlgorithm);
 
