@@ -830,7 +830,10 @@ int main(int argc, const char * const * const argv)
                if (childLimitOption.used())
                {
                    std::size_t limit = std::stoul(childLimitOption.value(), nullptr, 10);
-                   decompAlgorithm->addManipulationOperation(new htd::LimitChildCountOperation(libraryInstance, limit));
+                   if (limit > 1)
+		   	decompAlgorithm->addManipulationOperation(new htd::LimitChildCountOperation(libraryInstance, limit));
+		   else
+                   	decompAlgorithm->addManipulationOperation(new htd::JoinNodeReplacementOperation(libraryInstance));
                }
 
                 libraryInstance->treeDecompositionAlgorithmFactory().setConstructionTemplate(decompAlgorithm);
